@@ -18,7 +18,6 @@ const exchangeInfo = async () => {
 			});
 		}
 	});
-	//console.log(data.whitelist)
 }
 
 exchangeInfo().then(()=>new socket(data.whitelist));
