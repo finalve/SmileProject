@@ -11,7 +11,6 @@ class USERS {
 	}
 
 	async arbitrage({ data}) {
-
 		const response = await this.#newOrder(data[1].symbol, 'BUY', data[1].quantity, data[1].price)
 		console.log(response);
 	}
