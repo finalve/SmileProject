@@ -2,7 +2,7 @@ const { Spot } = require('@binance/connector');
 
 class USERS {
 	#client;
-	#pwd
+	#pwd;
 	constructor({ label, pwd, key, serect }) {
 		this.label = label;
 		this.key = key;
