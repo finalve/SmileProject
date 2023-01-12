@@ -44,25 +44,25 @@ class SOCKET {
 	async #calcurate({ base, stable, target, filter }) {
 		const { quantity, target_quantity, invest, profit, result } = this.#calculateProfit(11.0 / stable.a, stable.a, target.b, base.b, filter.lotsize)
 
-		if (result > 99.9) {
+		if (result > 100.15) {
 			if (instance) {
 				const tasks = instance.users.map(async user => {
 					const data = [
 						{
-							symbol:'USDT',
-							quantity:invest,
-							result:result
+							symbol: 'USDT',
+							quantity: invest,
+							result: result
 						}, {
 							symbol: stable.s,
 							quantity: quantity,
 							price: stable.a
 						}, {
 							symbol: target.s,
-							quantity: target_quantity,
+							quantity: quantity,
 							price: target.a
 						}, {
 							symbol: base.s,
-							quantity: profit,
+							quantity: target_quantity,
 							price: base.a
 						}];
 					await user.arbitrage({ data });
