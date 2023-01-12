@@ -10,8 +10,7 @@ module.exports = (app) => {
 	app.get('/api/create', (_, res) => res.redirect('/api'));
 	app.get('/api/delete', (_, res) => res.redirect('/api'));
 	app.post('/api/create', validateReqBody(['label', 'pwd', 'key', 'serect']), (req, res) => {
-		//if (instance.users.find((user) => user.label === req.body.label || user.key === req.body.key))
-		if (instance.users.find((user) => user.label === req.body.label))
+		if (instance.users.find((user) => user.label === req.body.label || user.key === req.body.key))
 			return res.status(400).json({ error: 'User already exists' });
 
 		try {
