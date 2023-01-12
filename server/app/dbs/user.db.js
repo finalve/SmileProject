@@ -14,23 +14,18 @@ class USERS {
 	}
 
 	async arbitrage({ data }) {
-		
+		const response = await this.#newOrder(data[1].symbol, 'BUY', data[1].quantity, data[1].price)
+		this.#openOrder.push({ data: data, response: response.data });
 		if (this.#openOrder.length < 1) {
-			//const response = await this.#newOrder('BTCUSDT', 'BUY', 0.0009, '15000')
-			const response = await this.#newOrder(data[1].symbol, 'BUY', data[1].quantity, data[1].price)
-			this.#openOrder.push({ data: data, response: response.data });
 		}
-
-		//response = await this.#newOrder(data[2].symbol, 'SELL', data[2].quantity, data[2].price)
-		//response = await this.#newOrder(data[3].symbol, 'SELL', data[2].quantity, data[3].price)
-		//console.log(response.data);
 	}
 
 	async #report() {
+		const _this = this;
 		const ListenKey = await this.#createListenKey();
 		this.#wsRef = this.#client.userData(ListenKey.listenKey, {
-			open: () => console.debug(`Connected to Socket Report ${this.label}`),
-			close: () => console.debug(`Disconnected with Socket Report ${this.label}`),
+			open: () => this.#log(`Connected to Socket Report`),
+			close: () => this.#log(`Disconnected with Socket Report`),
 			message: async data => {
 				// x = [NEW,CANCELED,PARTIALLY_FILLED,FILLED]
 				// e = [executionReport,outboundAccountPosition]
@@ -59,8 +54,7 @@ class USERS {
 							this.#log(`Filled Order ${json.orderId} Symbol ${json.symbol}`);
 							const order = this.#openOrder.find(x => x.response.orderId == json.orderId);
 							if (order) {
-								if(order.response.symbol == 'BTCUSDT')
-								{
+								if (order.response.symbol == 'BTCUSDT') {
 									this.#openOrder = this.#openOrder.filter(x => x.response.orderId !== json.orderId);
 									this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}]`);
 								}
@@ -68,22 +62,14 @@ class USERS {
 									const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data[2].quantity, order.data[2].price)
 									order.response = response.data
 								} else if (order.response.symbol.includes('BTC')) {
-									console.log('step 3')
 									const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data[3].quantity, order.data[3].price)
 									order.response = response.data;
 								}
 							}
 							break;
 						default:
-							console.log(json);
-
-						//console.log(order.data);
+							this.#log(`${json.currentOrder} Order ${json.orderId} Symbol ${json.symbol}`);
 					}
-					// if(json.currentOrder == "PARTIALLY_FILLED")
-					// {
-					// 	let step = order.step + 1;
-					// 	const response = await this.#newOrder(data[step].symbol, 'SELL', data[step].quantity, data[step].price)
-					// }
 				} else {
 					json = {
 						report: response.e,
@@ -93,6 +79,12 @@ class USERS {
 				}
 			}
 		});
+		setTimeout(() => _this.#refresh(), 3600000)
+	}
+	#refresh(){
+		this.#disconnect();
+		this.#log(`Restart Socket`);
+		this.#report();
 	}
 	#log(msg) {
 		var d = new Date();
