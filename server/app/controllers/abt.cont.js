@@ -16,7 +16,7 @@ class SOCKET {
 					.filter(symbol => symbol.s.includes('BTC'));
 				const Fields_USDT = filteredFields
 					.filter(symbol => symbol.s.includes('USDT'))
-					.filter(symbol => symbol.q > 4000000);
+					.filter(symbol => symbol.q > 3000000);
 
 				const tasks = Fields_USDT.map(async stable => {
 					const symbol = stable.s.replace('USDT', '');
@@ -69,7 +69,15 @@ class SOCKET {
 				});
 				await Promise.all(tasks);
 			}
+		}else if (result > 100)
+		{
+			this.#log(`Found persen ${result} % less 100.15`)
 		}
+	}
+	#log(msg) {
+		var d = new Date();
+		var n = d.toLocaleTimeString();
+		console.log(`${n} user:[SYSTEM]  message:[${msg}]`)
 	}
 	#lot(price, size) {
 		const decimalSize = size.toString().split('.')[1]?.length || 0;
