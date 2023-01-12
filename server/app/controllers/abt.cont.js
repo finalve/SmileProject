@@ -40,7 +40,14 @@ class SOCKET {
 		const result = this.#lot(profit / invest * 100, 0.0001)
 		return { quantity, target_quantity, invest, profit, result }
 	}
-
+	#calculateReverseProfit(quantity, stablePrice, targetPrice, basePrice, lotsize) {
+		quantity = this.#lot(quantity, lotsize);
+		const invest = this.#lot(quantity * stablePrice, 0.0001);
+		const target_quantity = this.#lot(quantity * targetPrice, 0.00001);
+		const profit = this.#lot(target_quantity * basePrice, 0.0001);
+		const result = this.#lot(profit / invest * 100, 0.0001)
+		return { quantity, target_quantity, invest, profit, result }
+	}
 	async #calcurate({ base, stable, target, filter }) {
 		const { quantity, target_quantity, invest, profit, result } = this.#calculateProfit(11.0 / stable.a, stable.a, target.b, base.b, filter.lotsize)
 
@@ -50,7 +57,8 @@ class SOCKET {
 					const data = [
 						{
 							symbol: 'USDT',
-							quantity: invest,
+							invest: invest,
+							profit: profit,
 							result: result
 						}, {
 							symbol: stable.s,
@@ -71,7 +79,7 @@ class SOCKET {
 			}
 		}else if (result > 100)
 		{
-			this.#log(`Found persen ${result} % less 100.15`)
+			this.#log(`Found persen ${result} % less 100.15 symbol ${target.s.replace('BTC','')}`)
 		}
 	}
 	#log(msg) {
