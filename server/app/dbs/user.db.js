@@ -5,6 +5,8 @@ class USERS {
 	#pwd;
 	#wsRef;
 	#openOrder = [];
+	#MaxInvest = 77;
+	#started = false;
 	constructor({ label, pwd, key, serect }) {
 		this.label = label;
 		this.key = key;
@@ -14,18 +16,24 @@ class USERS {
 	}
 
 	async arbitrage({ data }) {
-		const response = await this.#newOrder(data[1].symbol, 'BUY', data[1].quantity, data[1].price)
-		this.#openOrder.push({ data: data, response: response.data });
-		if (this.#openOrder.length < 1) {
-		}
+		if (this.#started)
+			if (this.#MaxInvest > data[0].invest)
+				if (this.#openOrder.length < 1) {
+					this.#openOrder.push({ data: data, response: { orderId: 0 } });
+					const response = await this.#newOrder(data[1].symbol, 'BUY', data[1].quantity, data[1].price)
+					if (!response.data)
+						console.log(response)
+				}
 	}
 
 	async #report() {
 		const _this = this;
 		const ListenKey = await this.#createListenKey();
 		this.#wsRef = this.#client.userData(ListenKey.listenKey, {
-			open: () => this.#log(`Connected to Socket Report`),
-			close: () => this.#log(`Disconnected with Socket Report`),
+			open: () => {
+				this.#log(`Connected to Server`)
+				this.#started = true;
+			},
 			message: async data => {
 				// x = [NEW,CANCELED,PARTIALLY_FILLED,FILLED]
 				// e = [executionReport,outboundAccountPosition]
@@ -44,26 +52,39 @@ class USERS {
 
 					switch (json.currentOrder) {
 						case "NEW":
-							this.#log(`Created Order ${json.orderId} Symbol ${json.symbol}`);
+							{
+								const order = this.#openOrder.find(x => x.data[1].symbol === json.symbol && x.data[1].price === json.price && x.response.orderId === 0);
+								if (order) {
+									this.#MaxInvest -= order.data[0].invest;
+									order.response = {
+										symbol: json.symbol,
+										orderId: json.orderId
+									}
+								}
+								this.#log(`Created Order ${json.orderId} Symbol ${json.symbol} data length ${this.#openOrder.length}`);
+							}
 							break;
 						case "CANCELED":
 							this.#openOrder = this.#openOrder.filter(x => x.response.orderId !== json.orderId);
-							this.#log(`Canceled Order ${json.orderId} Symbol ${json.symbol}`);
+							this.#log(`Canceled Order ${json.orderId} Symbol ${json.symbol} data length ${this.#openOrder.length}`);
 							break;
 						case "FILLED":
-							this.#log(`Filled Order ${json.orderId} Symbol ${json.symbol}`);
-							const order = this.#openOrder.find(x => x.response.orderId == json.orderId);
-							if (order) {
-								if (order.response.symbol == 'BTCUSDT') {
-									this.#openOrder = this.#openOrder.filter(x => x.response.orderId !== json.orderId);
-									this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}]`);
-								}
-								else if (order.response.symbol.includes('USDT')) {
-									const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data[2].quantity, order.data[2].price)
-									order.response = response.data
-								} else if (order.response.symbol.includes('BTC')) {
-									const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data[3].quantity, order.data[3].price)
-									order.response = response.data;
+							{
+								this.#log(`Filled Order ${json.orderId} Symbol ${json.symbol} data length ${this.#openOrder.length}`);
+								const order = this.#openOrder.find(x => x.response.orderId == json.orderId);
+								if (order) {
+									if (order.response.symbol === 'BTCUSDT') {
+										this.#openOrder = this.#openOrder.filter(x => x.response.orderId !== json.orderId);
+										this.#MaxInvest += order.data[0].profit;
+										this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${order.data[0].result - 100} %`);
+									}
+									else if (order.response.symbol.includes('USDT')) {
+										const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data[2].quantity, order.data[2].price)
+										order.response = response.data
+									} else if (order.response.symbol.includes('BTC')) {
+										const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data[3].quantity, order.data[3].price)
+										order.response = response.data;
+									}
 								}
 							}
 							break;
@@ -81,7 +102,7 @@ class USERS {
 		});
 		setTimeout(() => _this.#refresh(), 3600000)
 	}
-	#refresh(){
+	#refresh() {
 		this.#disconnect();
 		this.#log(`Restart Socket`);
 		this.#report();
@@ -101,7 +122,7 @@ class USERS {
 				});
 			return response;
 		} catch (error) {
-			return error.response;
+			return error.response.data;
 		}
 	}
 	async #createListenKey() {
@@ -122,6 +143,7 @@ class USERS {
 	}
 	delete({ pwd }) {
 		if (pwd === this.#pwd) {
+			this.#started = false;
 			this.#disconnect();
 			return true
 		}
