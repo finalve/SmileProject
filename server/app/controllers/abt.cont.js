@@ -16,7 +16,7 @@ class SOCKET {
 					.filter(symbol => symbol.s.includes('BTC'));
 				const Fields_USDT = filteredFields
 					.filter(symbol => symbol.s.includes('USDT'))
-					.filter(symbol => symbol.q > 3000000);
+					.filter(symbol => symbol.q > 1200000);
 
 				const tasks = Fields_USDT.map(async stable => {
 					const symbol = stable.s.replace('USDT', '');
@@ -52,6 +52,7 @@ class SOCKET {
 		const { quantity, target_quantity, invest, profit, result } = this.#calculateProfit(11.0 / stable.a, stable.a, target.b, base.b, filter.lotsize)
 
 		if (result > 100.15) {
+			this.#log(`Found persen ${result} % symbol ${target.s.replace('BTC','')}`)
 			if (instance) {
 				const tasks = instance.users.map(async user => {
 					const data = [
@@ -77,9 +78,6 @@ class SOCKET {
 				});
 				await Promise.all(tasks);
 			}
-		}else if (result > 100)
-		{
-			this.#log(`Found persen ${result} % less 100.15 symbol ${target.s.replace('BTC','')}`)
 		}
 	}
 	#log(msg) {

@@ -2,34 +2,35 @@ const { Spot } = require('@binance/connector');
 
 class USERS {
 	#client;
-	#pwd;
+	#password;
 	#wsRef;
+	#listenkey;
 	#openOrder = [];
-	#MaxInvest = 77;
 	#started = false;
-	constructor({ label, pwd, key, serect }) {
-		this.label = label;
-		this.key = key;
-		this.#pwd = pwd;
-		this.#client = new Spot(key, serect);
-		this.#report();
+	constructor({ username, password, apikey, apiserect }) {
+		this.username = username;
+		this.apikey = apikey;
+		this.#password = password;
+		this.Invesment = 0;
+		this.orderLength = 5;
+		this.#client = new Spot(apikey, apiserect);
+		this.#myWallet();
+		this.#createListenKey();
 	}
-
+	
 	async arbitrage({ data }) {
 		if (this.#started)
-			if (this.#MaxInvest > data[0].invest)
-				if (this.#openOrder.length < 1) {
+			if (this.Invesment > data[0].invest)
+				if (this.#openOrder.length < this.orderLength) {
 					this.#openOrder.push({ data: data, response: { orderId: 0 } });
 					const response = await this.#newOrder(data[1].symbol, 'BUY', data[1].quantity, data[1].price)
 					if (!response.data)
-						console.log(response)
-				}
+						this.#error(response);
+				} 
 	}
-
 	async #report() {
 		const _this = this;
-		const ListenKey = await this.#createListenKey();
-		this.#wsRef = this.#client.userData(ListenKey.listenKey, {
+		this.#wsRef = this.#client.userData(this.#listenkey, {
 			open: () => {
 				this.#log(`Connected to Server`)
 				this.#started = true;
@@ -46,6 +47,7 @@ class USERS {
 						order: response.o,
 						signal: response.S,
 						price: response.p,
+						quote: response.Z,
 						currentOrder: response.X,
 						orderId: response.i
 					};
@@ -55,7 +57,6 @@ class USERS {
 							{
 								const order = this.#openOrder.find(x => x.data[1].symbol === json.symbol && x.data[1].price === json.price && x.response.orderId === 0);
 								if (order) {
-									this.#MaxInvest -= order.data[0].invest;
 									order.response = {
 										symbol: json.symbol,
 										orderId: json.orderId
@@ -75,14 +76,17 @@ class USERS {
 								if (order) {
 									if (order.response.symbol === 'BTCUSDT') {
 										this.#openOrder = this.#openOrder.filter(x => x.response.orderId !== json.orderId);
-										this.#MaxInvest += order.data[0].profit;
-										this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${order.data[0].result - 100} %`);
+										this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${json.quote / order.data[0].invest * 100 - 100} %`);
 									}
 									else if (order.response.symbol.includes('USDT')) {
 										const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data[2].quantity, order.data[2].price)
+										if (!response.data)
+											this.#error(response);
 										order.response = response.data
 									} else if (order.response.symbol.includes('BTC')) {
 										const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data[3].quantity, order.data[3].price)
+										if (!response.data)
+											this.#error(response);
 										order.response = response.data;
 									}
 								}
@@ -96,7 +100,14 @@ class USERS {
 						report: response.e,
 						symbol: response.B
 					};
-
+					try{
+						const stable = json.symbol.find(x=>x.a==='USDT')
+						this.Invesment = parseFloat(stable.f)
+						this.#log(`balance of ${this.Invesment} USDT`)
+					}catch(error){
+						this.#error(`${error}`)
+					}
+					
 				}
 			}
 		});
@@ -105,12 +116,29 @@ class USERS {
 	#refresh() {
 		this.#disconnect();
 		this.#log(`Restart Socket`);
-		this.#report();
+		this.#createListenKey();
 	}
 	#log(msg) {
 		var d = new Date();
 		var n = d.toLocaleTimeString();
-		console.log(`${n} user:[${this.label}]  message:[${msg}]`)
+		console.log(`${n} user:[${this.username}] message:[${msg}]`)
+	}
+
+	#error(msg) {
+		var d = new Date();
+		var n = d.toLocaleTimeString();
+		console.log(`${n} user:[${this.username}] error:[${msg}]`)
+	}
+	async #myWallet() {
+		try{
+			const response = await this.#client.userAsset();
+			const stable = response.data.find(x=>x.asset === 'USDT');
+			this.Invesment = parseFloat(stable.free);
+			this.#log(`balance of ${this.Invesment} USDT`)
+			return response.data	
+		}catch(error){
+			this.#error(error.response.data);
+		}
 	}
 	async #newOrder(symbol, process, quantity, price) {
 		try {
@@ -126,8 +154,15 @@ class USERS {
 		}
 	}
 	async #createListenKey() {
-		const response = await this.#client.createListenKey()
-		return response.data;
+		try {
+			const response = await this.#client.createListenKey()
+			this.#listenkey = response.data.listenKey;
+			this.#report();
+			this.status = true;
+		} catch (error) {
+			console.log(error.response.data)
+			this.status = false;
+		}
 	}
 
 	async #cancelOrder(symbol, orderId) {
@@ -141,8 +176,8 @@ class USERS {
 	#disconnect() {
 		this.#client.unsubscribe(this.#wsRef);
 	}
-	delete({ pwd }) {
-		if (pwd === this.#pwd) {
+	delete({ password }) {
+		if (password === this.#password) {
 			this.#started = false;
 			this.#disconnect();
 			return true
