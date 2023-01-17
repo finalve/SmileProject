@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navbar, Home, CreateUser } from './app/components';
+import { Home, CreateUser } from './app/components';
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'

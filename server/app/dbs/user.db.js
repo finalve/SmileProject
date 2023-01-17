@@ -5,7 +5,6 @@ class USERS {
 	#password;
 	#wsRef;
 	#listenkey;
-	#openOrder = [];
 	#started = false;
 	constructor({ username, password, apikey, apiserect }) {
 		this.username = username;
@@ -13,16 +12,19 @@ class USERS {
 		this.#password = password;
 		this.Invesment = 0;
 		this.orderLength = 5;
+		this.openOrder = [];
 		this.#client = new Spot(apikey, apiserect);
 		this.#myWallet();
 		this.#createListenKey();
+		this.alive = new Date().getTime();
+		this.pnl = 0;
 	}
 	
 	async arbitrage({ data }) {
 		if (this.#started)
 			if (this.Invesment > data[0].invest)
-				if (this.#openOrder.length < this.orderLength) {
-					this.#openOrder.push({ data: data, response: { orderId: 0 } });
+				if (this.openOrder.length < this.orderLength) {
+					this.openOrder.push({ data: data, response: { orderId: 0 } });
 					const response = await this.#newOrder(data[1].symbol, 'BUY', data[1].quantity, data[1].price)
 					if (!response.data)
 						this.#error(response);
@@ -55,28 +57,29 @@ class USERS {
 					switch (json.currentOrder) {
 						case "NEW":
 							{
-								const order = this.#openOrder.find(x => x.data[1].symbol === json.symbol && x.data[1].price === json.price && x.response.orderId === 0);
+								const order = this.openOrder.find(x => x.data[1].symbol === json.symbol && x.data[1].price === json.price && x.response.orderId === 0);
 								if (order) {
 									order.response = {
 										symbol: json.symbol,
 										orderId: json.orderId
 									}
 								}
-								this.#log(`Created Order ${json.orderId} Symbol ${json.symbol} data length ${this.#openOrder.length}`);
+								this.#log(`Created Order ${json.orderId} Symbol ${json.symbol} data length ${this.openOrder.length}`);
 							}
 							break;
 						case "CANCELED":
-							this.#openOrder = this.#openOrder.filter(x => x.response.orderId !== json.orderId);
-							this.#log(`Canceled Order ${json.orderId} Symbol ${json.symbol} data length ${this.#openOrder.length}`);
+							this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
+							this.#log(`Canceled Order ${json.orderId} Symbol ${json.symbol} data length ${this.openOrder.length}`);
 							break;
 						case "FILLED":
 							{
-								this.#log(`Filled Order ${json.orderId} Symbol ${json.symbol} data length ${this.#openOrder.length}`);
-								const order = this.#openOrder.find(x => x.response.orderId == json.orderId);
+								this.#log(`Filled Order ${json.orderId} Symbol ${json.symbol} data length ${this.openOrder.length}`);
+								const order = this.openOrder.find(x => x.response.orderId == json.orderId);
 								if (order) {
 									if (order.response.symbol === 'BTCUSDT') {
-										this.#openOrder = this.#openOrder.filter(x => x.response.orderId !== json.orderId);
+										this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
 										this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${json.quote / order.data[0].invest * 100 - 100} %`);
+										this.pnl += json.quote - order.data[0].invest
 									}
 									else if (order.response.symbol.includes('USDT')) {
 										const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data[2].quantity, order.data[2].price)
@@ -175,6 +178,9 @@ class USERS {
 	}
 	#disconnect() {
 		this.#client.unsubscribe(this.#wsRef);
+	}
+	status(){
+		return this.#started;
 	}
 	delete({ password }) {
 		if (password === this.#password) {

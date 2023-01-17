@@ -10,9 +10,17 @@ module.exports = (app) => {
 		res.json(instance.users.map(users=>{
 			return {
 				username:users.username,
-				status:users.status}
+				status:users.status,
+				maxlen:users.orderLength,
+				len:users.openOrder.length,
+				invesment:users.Invesment,
+				ipr:11,
+				alive:users.alive,
+				pnl:users.pnl
+
+			}
 		}))
-	} );
+	});
 	app.get('/api/create', (_, res) => res.redirect('/api'));
 	app.get('/api/delete', (_, res) => res.redirect('/api'));
 	app.post('/api/create', [validateReqBody(['username', 'password', 'apikey', 'apiserect'])], (req, res) => {
