@@ -117,9 +117,10 @@ class USERS {
 		setTimeout(() => _this.#refresh(), 3600000)
 	}
 	#refresh() {
-		this.#disconnect();
-		this.#log(`Restart Socket`);
-		this.#createListenKey();
+		this.#client.pingServer(this.#wsRef)
+		// this.#createListenKey();
+		// this.#disconnect();
+		// this.#log(`Restart Socket`);
 	}
 	#log(msg) {
 		var d = new Date();

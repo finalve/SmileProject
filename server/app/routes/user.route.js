@@ -4,19 +4,18 @@ const instance = require("../dbs/instance.db");
 const { validateReqBody } = require("../middlewares/validator.mid");
 
 module.exports = (app) => {
-	app.listen(port,() => console.log(`app listening on port ${port}!`));
-
+	app.listen(port, () => console.log(`app listening on port ${port}!`));
 	app.get('/api', (_, res) => {
-		res.json(instance.users.map(users=>{
+		res.status(200).json(instance.users.map(users => {
 			return {
-				username:users.username,
-				status:users.status,
-				maxlen:users.orderLength,
-				len:users.openOrder.length,
-				invesment:users.Invesment,
-				ipr:11,
-				alive:users.alive,
-				pnl:users.pnl
+				username: users.username,
+				status: users.status,
+				maxlen: users.orderLength,
+				len: users.openOrder.length,
+				invesment: users.Invesment,
+				ipr: 11,
+				alive: users.alive,
+				pnl: users.pnl
 
 			}
 		}))
@@ -43,7 +42,7 @@ module.exports = (app) => {
 
 		if (!foundUser.delete(req.body))
 			return res.status(400).json({ error: 'Invalid password' });
-			instance.users = instance.users.filter((user) => user.username !== req.body.username);
+		instance.users = instance.users.filter((user) => user.username !== req.body.username);
 		res.json({ message: 'User deleted successfully' });
 
 	})

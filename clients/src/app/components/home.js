@@ -3,14 +3,11 @@ import React, { useState, useEffect } from 'react';
 
 const Home = () => {
 	const [data, response] = useState();
-	const [username, setUser] = useState({
-		username: '',
-		password: '',
-	});
+	const [user, setUser] = useState(null);
 	const fetchUsers = async () => {
 		const res = await axios({
 			method: 'get',
-			url: 'http://171.6.138.115/api',
+			url: 'http://171.6.148.81/api/',
 
 		});
 
@@ -19,7 +16,7 @@ const Home = () => {
 
 	useEffect(() => {
 		fetchUsers();
-	}, []);
+	}, [user]);
 	return (
 		<div>
 			<div className='text-end mt-5'>
@@ -55,7 +52,7 @@ const Home = () => {
 					)
 					: <div className='text-center'><h1>Loading...</h1></div>
 			}
-			{<View users={username} />}
+			{<View users={user} />}
 		</div>
 	)
 }
@@ -67,7 +64,7 @@ const timeConvert = (time) => {
 	let distance = now - time;
 
 	// Time calculations for days, hours, minutes and seconds
-	let days = Math.floor(distance / (1000 * 60 * 60)/24);
+	let days = Math.floor(distance / (1000 * 60 * 60) / 24);
 	let hours = Math.floor(distance / (1000 * 60 * 60));
 	let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
 	let seconds = Math.floor((distance % (1000 * 60)) / 1000);
@@ -79,9 +76,12 @@ const timeConvert = (time) => {
 
 	return `Day ${days} / ${hours}:${minutes}:${seconds} Hour`
 }
+
 const View = ({ users }) => {
 	const [username, setUser] = useState(null);
+
 	return (<div>
+		
 		<div className="modal fade" id="view" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
 			<div className="modal-dialog modal-dialog-centered">
 				<div className="modal-content">
@@ -95,42 +95,42 @@ const View = ({ users }) => {
 								<h5>Username</h5>
 							</div>
 							<div className='col-8'>
-							<span>{users.username}</span>	
+								<span>{users?.username}</span>
 							</div>
-							
+
 							<div className='col-4'>
 								<h5>Invesment</h5>
 							</div>
 							<div className='col-8'>
-							<span>{users.invesment} USDT</span>
+								<span>{users?.invesment} USDT</span>
 							</div>
 
 							<div className='col-4'>
 								<h5>Process</h5>
 							</div>
 							<div className='col-8'>
-							<span>{users.len}/{users.maxlen}</span>
+								<span>{users?.len}/{users?.maxlen}</span>
 							</div>
 
 							<div className='col-4'>
 								<h5>IPR</h5>
 							</div>
 							<div className='col-8'>
-							<span>{users.ipr} USDT</span>
+								<span>{users?.ipr} USDT</span>
 							</div>
 
 							<div className='col-4'>
 								<h5>Alive</h5>
 							</div>
 							<div className='col-8'>
-							<span>{timeConvert(users.alive)}</span>
+								<span>{timeConvert(users?.alive)}</span>
 							</div>
 
 							<div className='col-4'>
 								<h4>PNL</h4>
 							</div>
 							<div className='col-8'>
-							<span>{users.pnl}</span>
+								<span>{users?.pnl}</span>
 							</div>
 
 
@@ -138,7 +138,7 @@ const View = ({ users }) => {
 					</div>
 					<div className="modal-footer">
 						<button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-						<button type="button" className="btn btn-danger" data-bs-toggle="modal" data-bs-target="#remove" onClick={() => setUser(users.username)} >Remove</button>
+						<button type="button" className="btn btn-danger" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#remove" onClick={() => setUser(users.username)} >Remove</button>
 					</div>
 				</div>
 			</div>

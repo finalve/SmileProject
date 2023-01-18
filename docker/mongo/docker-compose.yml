@@ -1,0 +1,14 @@
+# Use root/example as user/password credentials
+
+version: '3'
+services:
+  mongo:
+    image: mongo:4.4
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: oIuern
+      MONGO_INITDB_ROOT_PASSWORD: POfd54***dsfsd57++#
+    volumes:
+      - ./database:/data/db
+    ports:
+      - 27018:27017
