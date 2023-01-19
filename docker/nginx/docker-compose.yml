@@ -4,8 +4,8 @@ services:
         image: nginx:1.17.9-alpine
         container_name: nginx
         volumes:
-          - ./nginx/conf:/etc/nginx/conf.d
-          - ./nginx/build:/usr/share/nginx/html
+          - ./conf:/etc/nginx/conf.d
+          - ./build:/usr/share/nginx/html
         ports:
           - 80:80
           - 443:443

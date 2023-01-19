@@ -1,13 +1,13 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-
+import {api} from '../../config';
 const Home = () => {
 	const [data, response] = useState();
 	const [user, setUser] = useState(null);
 	const fetchUsers = async () => {
 		const res = await axios({
 			method: 'get',
-			url: 'http://171.6.148.81/api/',
+			url: `http://${api}/api/`,
 
 		});
 
@@ -172,7 +172,7 @@ const Remove = ({ username, close }) => {
 		if (data.username === username) {
 			axios({
 				method: 'post',
-				url: 'http://171.6.138.115/api/delete',
+				url: `http://${api}/api/delete`,
 				data: data
 			}).then((res) =>
 				console.log(res.data)

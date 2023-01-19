@@ -1,42 +1,75 @@
 import React, { useState } from 'react';
-import { Home, CreateUser } from './app/components';
+import { Navbar, Nav, Container, Button, Form } from 'react-bootstrap';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import AuthService from "./app/services/auth.service";
+import { Signin, Home, Signup } from './app/components';
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import './App.css';
+class App extends React.Component {
+	constructor(props) {
+		super(props);
 
-function App() {
-	return (
-		<Router>
-			<nav className="navbar navbar-expand-sm navbar-dark bg-primary sticky-top">
-				<div className="container-fluid">
-					<Link className="navbar-brand" to='/'>Logo</Link>
-					<button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mynavbar">
-						<span className="navbar-toggler-icon"></span>
-					</button>
-					<div className="collapse navbar-collapse" id="mynavbar">
-						<ul className="navbar-nav me-auto">
-							<li className="nav-item">
-								<Link className="nav-link" to='/'>Dashboard</Link>
-							</li>
-							<li className="nav-item">
-								<Link className="nav-link" to='/signup'>Sign up</Link>
-							</li>
-						</ul>
-					</div>
-				</div>
-			</nav>
-			<div className='container-fluid'>
-				<div className="container">
+		this.state = {
+			showModeratorBoard: false,
+			showAdminBoard: false,
+			currentUser: undefined,
+		};
+	}
+	componentDidMount() {
+		const user = AuthService.getCurrentUser();
+
+		if (user) {
+			this.setState({
+				currentUser: user,
+				showModeratorBoard: user.roles.includes("ROLE_MODERATOR"),
+				showAdminBoard: user.roles.includes("ROLE_ADMIN"),
+			});
+		}
+	}
+
+	render() {
+		const { currentUser, showModeratorBoard, showAdminBoard } = this.state;
+		return (
+			<Router>
+				<Navbar collapseOnSelect expand="lg" bg="primary" variant="dark">
+					<Container>
+						<Navbar.Brand><Link className="nav-link" to='/'>React-Bootstrap</Link></Navbar.Brand>
+						<Navbar.Toggle aria-controls="responsive-navbar-nav" />
+						<Navbar.Collapse id="responsive-navbar-nav">
+							{
+								currentUser ? (
+									<Nav className="ms-auto">
+										<Link className="nav-link" to='/signin'>Sign Out</Link>
+									</Nav>
+								)
+									:
+									(
+										<Nav className="ms-auto">
+											<Link className="nav-link" to='/signin'>Sign in</Link>
+											<Link className="nav-link" to='/signup'>Sign up</Link>
+										</Nav>
+									)
+							}
+						</Navbar.Collapse>
+					</Container>
+				</Navbar>
+				<Container>
 					<Routes>
 						<Route exact path="/" element={<Home />} />
 						<Route path="/" element={<Home />} />
-						<Route path="/signup" element={<CreateUser />} />
+						{
+							!currentUser ? (
+								<>
+									<Route path="/signin" element={<Signin show={true} />} />
+									<Route path="/signup" element={<Signup show={true} />} />
+								</>
+							):(<></>)
+						}
 					</Routes>
-				</div>
-			</div>
-		</Router>
-	);
+				</Container>
+			</Router>
+		);
+	}
 }
-
 export default App;

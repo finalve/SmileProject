@@ -1,5 +1,6 @@
 import axios from 'axios';
 import React, { useState } from 'react';
+import {api} from '../../config';
 const CreateUser = () => {
 	const [data, setData] = useState(
 		{
@@ -66,7 +67,7 @@ const fetchData = async (data) => {
 	try {
 		const response = await axios({
 			method: 'post',
-			url: 'http://171.6.138.115/api/create',
+			url: `http://${api}/api/create`,
 			data: data
 		}
 		);

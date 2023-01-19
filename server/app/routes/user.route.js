@@ -1,10 +1,8 @@
-const port = 8080;
 const User = require("../dbs/user.db");
 const instance = require("../dbs/instance.db");
 const { validateReqBody } = require("../middlewares/validator.mid");
 
 module.exports = (app) => {
-	app.listen(port, () => console.log(`app listening on port ${port}!`));
 	app.get('/api', (_, res) => {
 		res.status(200).json(instance.users.map(users => {
 			return {
@@ -15,8 +13,7 @@ module.exports = (app) => {
 				invesment: users.Invesment,
 				ipr: 11,
 				alive: users.alive,
-				pnl: users.pnl
-
+				pnl: parseFloat(users.pnl).toFixed(8)
 			}
 		}))
 	});
@@ -47,3 +44,4 @@ module.exports = (app) => {
 
 	})
 }
+

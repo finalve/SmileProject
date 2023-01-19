@@ -19,16 +19,16 @@ class USERS {
 		this.alive = new Date().getTime();
 		this.pnl = 0;
 	}
-	
+
 	async arbitrage({ data }) {
 		if (this.#started)
 			if (this.Invesment > data[0].invest)
-				if (this.openOrder.length < this.orderLength) {
+				if (this.openOrder.length <= this.orderLength) {
 					this.openOrder.push({ data: data, response: { orderId: 0 } });
 					const response = await this.#newOrder(data[1].symbol, 'BUY', data[1].quantity, data[1].price)
 					if (!response.data)
 						this.#error(response);
-				} 
+				}
 	}
 	async #report() {
 		const _this = this;
@@ -103,14 +103,17 @@ class USERS {
 						report: response.e,
 						symbol: response.B
 					};
-					try{
-						const stable = json.symbol.find(x=>x.a==='USDT')
+					try {
+						const stable = json.symbol.find(x => x.a === 'USDT')
+						if (!stable.f)
+							this.#error(`${stable}`)
 						this.Invesment = parseFloat(stable.f)
 						this.#log(`balance of ${this.Invesment} USDT`)
-					}catch(error){
+
+					} catch (error) {
 						this.#error(`${error}`)
 					}
-					
+
 				}
 			}
 		});
@@ -134,13 +137,13 @@ class USERS {
 		console.log(`${n} user:[${this.username}] error:[${msg}]`)
 	}
 	async #myWallet() {
-		try{
+		try {
 			const response = await this.#client.userAsset();
-			const stable = response.data.find(x=>x.asset === 'USDT');
+			const stable = response.data.find(x => x.asset === 'USDT');
 			this.Invesment = parseFloat(stable.free);
 			this.#log(`balance of ${this.Invesment} USDT`)
-			return response.data	
-		}catch(error){
+			return response.data
+		} catch (error) {
 			this.#error(error.response.data);
 		}
 	}
@@ -180,7 +183,7 @@ class USERS {
 	#disconnect() {
 		this.#client.unsubscribe(this.#wsRef);
 	}
-	status(){
+	status() {
 		return this.#started;
 	}
 	delete({ password }) {
