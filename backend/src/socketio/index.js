@@ -36,6 +36,12 @@ class Socket {
 		  });
 	}
 
+	userdata(req,res){
+		this.#socket.emit('userdata',req.body, (response) => {
+			return res.status(response.status).json(response);
+		  });
+	}
+
 
 }
 

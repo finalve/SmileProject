@@ -19,7 +19,7 @@ exports.register = (req, res) => {
 
 		const newUser = new User({
 			username: username,
-			password: bcrypt.hashSync(req.body.password, 8),
+			password: bcrypt.hashSync(password, 8),
 			label:label,
 			role: 'user'
 		});
@@ -90,4 +90,8 @@ exports.delete = (req, res) => {
 
 exports.arbitrage = (req, res) => {
 	socket.arbitrage(req,res);
+};
+
+exports.userdata = (req, res) => {
+	socket.userdata(req,res);
 };

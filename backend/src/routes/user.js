@@ -11,4 +11,5 @@ router.post('/login', userCtrl.login);
 router.post('/add', [authJwt.verifyToken], userCtrl.add);
 router.post('/delete', [authJwt.verifyToken], userCtrl.delete);
 router.get('/arbitrage', [authJwt.verifyToken], userCtrl.arbitrage);
+router.get('/userdata', [authJwt.verifyToken], userCtrl.userdata);
 module.exports = router;

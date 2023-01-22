@@ -54,10 +54,33 @@ class socket {
 			)
 
 			socket.on('arbitrage', (_, callback) => {
-				callback({
+				return callback({
 					status: 200,
 					message: data.arbitrage
 				})
+			})
+
+			socket.on('userdata', (req, callback) => {
+				const foundWorker = Instance.worker.find((worker) => worker.label === req.label);
+				if (!foundWorker)
+					return callback({
+						status: 400,
+						message: `User not found`
+					});
+
+					return callback({
+					status: 200,
+					data: {
+						label: foundWorker.label,
+						status: foundWorker.status,
+						maxlen: foundWorker.orderLength,
+						len: foundWorker.openOrder.length,
+						invesment: foundWorker.Invesment,
+						ipr: 20,
+						alive: foundWorker.alive,
+						pnl: parseFloat(foundWorker.pnl).toFixed(8)
+					}
+				});
 			})
 		});
 

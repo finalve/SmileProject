@@ -8,7 +8,7 @@ class Worker {
 		this.label = label;
 		this.apikey = apikey;
 		this.Invesment = 0;
-		this.orderLength = 5;
+		this.orderLength = 1;
 		this.openOrder = [];
 		this.#client = new Spot(apikey, apiserect);
 		this.#myWallet();
@@ -17,13 +17,13 @@ class Worker {
 		this.pnl = 0;
 		
 	}
-
+	
 	async arbitrage({ data }) {
 		if (this.#started)
 			if (this.Invesment > data[0].invest)
-				if (this.openOrder.length <= this.orderLength) {
+				if (this.openOrder.length < this.orderLength) {
 					this.openOrder.push({ data: data, response: { orderId: 0 } });
-					const response = await this.#newOrder(data[1].symbol, data[1].signal, data[1].quantity, data[1].price)
+					const response = await this.#newOrder(data[1].symbol,data[1].signal, data[1].quantity, data[1].price)
 					if (!response.data)
 						this.#error(response);
 				}
@@ -70,7 +70,7 @@ class Worker {
 					case "FILLED":
 						{
 							this.#log(`Filled Order ${json.orderId} Symbol ${json.symbol} data length ${this.openOrder.length}`);
-							const order = this.openOrder.find(x => x.response.orderId == json.orderId);
+							const order = this.openOrder.find(x => x.response?.orderId == json.orderId);
 							if (order) {
 								if(order.data[0].pattern === "A")
 								{
@@ -80,12 +80,12 @@ class Worker {
 										this.pnl += json.quote - order.data[0].invest
 									}
 									else if (order.response.symbol.includes('USDT')) {
-										const response = await this.#newOrder(order.data[2].symbol,  data[2].signal, order.data[2].quantity, order.data[2].price)
+										const response = await this.#newOrder(order.data[2].symbol, `${order.data[2].signal}`, order.data[2].quantity, order.data[2].price)
 										if (!response.data)
 											this.#error(response);
 										order.response = response.data
 									} else if (order.response.symbol.includes('BTC')) {
-										const response = await this.#newOrder(order.data[3].symbol,  data[3].signal, order.data[3].quantity, order.data[3].price)
+										const response = await this.#newOrder(order.data[3].symbol,   `${order.data[3].signal}`, order.data[3].quantity, order.data[3].price)
 										if (!response.data)
 											this.#error(response);
 										order.response = response.data;
@@ -98,13 +98,13 @@ class Worker {
 										this.pnl += json.quote - order.data[0].invest
 									}
 									else if (order.response.symbol === 'BTCUSDT') {
-										const response = await this.#newOrder(order.data[2].symbol,  data[2].signal, order.data[2].quantity, order.data[2].price)
+										const response = await this.#newOrder(order.data[2].symbol,  `${order.data[2].signal}`, order.data[2].quantity, order.data[2].price)
 										if (!response.data)
 											this.#error(response);
 										order.response = response.data
 									} 
 									else if (order.response.symbol.includes('BTC')) {
-										const response = await this.#newOrder(order.data[3].symbol,  data[3].signal, order.data[3].quantity, order.data[3].price)
+										const response = await this.#newOrder(order.data[3].symbol,  `${order.data[3].signal}`, order.data[3].quantity, order.data[3].price)
 										if (!response.data)
 											this.#error(response);
 										order.response = response.data;
@@ -129,7 +129,7 @@ class Worker {
 					this.#log(`balance of ${this.Invesment} USDT`)
 
 				} catch (error) {
-					this.#error(`${error}`)
+					this.#error(`${error.response}`)
 				}
 
 			}
@@ -155,7 +155,8 @@ class Worker {
 	#error(msg) {
 		var d = new Date();
 		var n = d.toLocaleTimeString();
-		console.log(`${n} user:[${this.label}] error:[${msg}]`)
+		//console.log(`${n} user:[${this.label}] error:[${JSON.parse(msg)}]`)
+		console.log(msg)
 	}
 	async #myWallet() {
 		try {
@@ -168,9 +169,9 @@ class Worker {
 			this.#error(error.response.data);
 		}
 	}
-	async #newOrder(symbol, process, quantity, price) {
+	async #newOrder(symbol, signal, quantity, price) {
 		try {
-			const response = await this.#client.newOrder(symbol, process, 'LIMIT',
+			const response = await this.#client.newOrder(symbol, signal, 'LIMIT',
 				{
 					quantity: quantity,
 					price: price,
@@ -178,7 +179,7 @@ class Worker {
 				});
 			return response;
 		} catch (error) {
-			return error.response.data;
+			return error;
 		}
 	}
 	async #createListenKey() {
