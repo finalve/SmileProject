@@ -78,7 +78,8 @@ class SOCKET {
 				});
 				await Promise.all(tasks);
 			}
-		}
+		}else 	if (result >= 100) 
+			this.#log(`Found persen ${result} % symbol ${target.s.replace('BTC','')}`)
 	}
 	#log(msg) {
 		var d = new Date();

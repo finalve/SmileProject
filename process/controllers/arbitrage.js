@@ -29,7 +29,7 @@ class Arbitrage {
 					const filter = _wl.find(x => x.symbol === stable.s)
 					const r_filter = _wl.find(x => x.symbol === target.s)
 					
-					return await this.#calcurate({ base, stable, target, filter,r_filter });
+					await this.#calcurate({ base, stable, target, filter,r_filter });
 				});
 				await Promise.all(tasks);
 			}
@@ -43,6 +43,7 @@ class Arbitrage {
 		const result = this.#lot(profit / invest * 100, 0.0001)
 		return { quantity, target_quantity, invest, profit, result }
 	}
+	
 	#calculateReverseProfit(quantity, stablePrice, targetPrice, basePrice, lotsize) {
 		const r_quantity = this.#lot(quantity, 0.00001);
 		const r_invest = this.#lot(r_quantity * stablePrice, 0.0001);
