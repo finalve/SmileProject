@@ -8,7 +8,7 @@ class Worker {
 		this.label = label;
 		this.apikey = apikey;
 		this.Invesment = 0;
-		this.orderLength = 1;
+		this.orderLength = 5;
 		this.openOrder = [];
 		this.#client = new Spot(apikey, apiserect);
 		this.#myWallet();
