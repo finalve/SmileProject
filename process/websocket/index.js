@@ -76,9 +76,10 @@ class socket {
 						maxlen: foundWorker.orderLength,
 						len: foundWorker.openOrder.length,
 						invesment: foundWorker.Invesment,
-						ipr: 20,
+						ipr: foundWorker.ipr,
 						alive: foundWorker.alive,
-						pnl: parseFloat(foundWorker.pnl).toFixed(8)
+						pnl: parseFloat(foundWorker.pnl).toFixed(8),
+						orderOpen:foundWorker.openOrder
 					}
 				});
 			})

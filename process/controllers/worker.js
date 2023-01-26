@@ -18,7 +18,7 @@ class Worker {
 		
 	}
 	
-	async arbitrage({ data }) {
+	async arbitrage({ data}) {
 		if (this.#started)
 			if (this.Invesment > data[0].invest)
 				if (this.openOrder.length < this.orderLength) {
@@ -140,7 +140,7 @@ class Worker {
 		const wsRef = this.#client.userData(this.#listenkey, this.#callback);
 		this.#disconnect();
 		this.#wsRef = wsRef;
-		setTimeout(() => _this.#refresh(), 7200000)
+		setTimeout(() => _this.#refresh(), 3600000)
 	}
 	#refresh() {
 		this.#createListenKey();
