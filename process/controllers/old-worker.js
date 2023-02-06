@@ -15,15 +15,16 @@ class Worker {
 		this.#createListenKey();
 		this.alive = new Date().getTime();
 		this.pnl = 0;
+		this.history = [];
 		
 	}
 	
-	async arbitrage({ data,callback = null }) {
+	async arbitrage({ data}) {
 		if (this.#started)
 			if (this.Invesment > data[0].invest)
 				if (this.openOrder.length < this.orderLength) {
 					this.openOrder.push({ data: data, response: { orderId: 0 } });
-					const response = await this.#newOrder(data[1].symbol,data[1].signal, data[1].quantity, data[1].price)
+					const response = await this.#newOrder(data[1].symbol,'BUY', data[1].quantity, data[1].price)
 					if (!response.data)
 						this.#error(response);
 				}
@@ -46,10 +47,11 @@ class Worker {
 					signal: response.S,
 					price: response.p,
 					quote: response.Z,
+					execution_type: response.x,
 					currentOrder: response.X,
 					orderId: response.i
 				};
-
+				this.history.push(json)
 				switch (json.currentOrder) {
 					case "NEW":
 						{
@@ -80,12 +82,12 @@ class Worker {
 										this.pnl += json.quote - order.data[0].invest
 									}
 									else if (order.response.symbol.includes('USDT')) {
-										const response = await this.#newOrder(order.data[2].symbol, `${order.data[2].signal}`, order.data[2].quantity, order.data[2].price)
+										const response = await this.#newOrder(order.data[2].symbol,'SELL', order.data[2].quantity, order.data[2].price)
 										if (!response.data)
 											this.#error(response);
 										order.response = response.data
 									} else if (order.response.symbol.includes('BTC')) {
-										const response = await this.#newOrder(order.data[3].symbol,   `${order.data[3].signal}`, order.data[3].quantity, order.data[3].price)
+										const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data[3].quantity, order.data[3].price)
 										if (!response.data)
 											this.#error(response);
 										order.response = response.data;
@@ -98,13 +100,13 @@ class Worker {
 										this.pnl += json.quote - order.data[0].invest
 									}
 									else if (order.response.symbol === 'BTCUSDT') {
-										const response = await this.#newOrder(order.data[2].symbol,  `${order.data[2].signal}`, order.data[2].quantity, order.data[2].price)
+										const response = await this.#newOrder(order.data[2].symbol, 'BUY', order.data[2].quantity, order.data[2].price)
 										if (!response.data)
 											this.#error(response);
 										order.response = response.data
 									} 
 									else if (order.response.symbol.includes('BTC')) {
-										const response = await this.#newOrder(order.data[3].symbol,  `${order.data[3].signal}`, order.data[3].quantity, order.data[3].price)
+										const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data[3].quantity, order.data[3].price)
 										if (!response.data)
 											this.#error(response);
 										order.response = response.data;
@@ -137,12 +139,11 @@ class Worker {
 	};
 	#report() {
 		const _this = this;
-		const wsRef = this.#client.userData(this.#listenkey, this.#callback);
-		this.#disconnect();
-		this.#wsRef = wsRef;
-		setTimeout(() => _this.#refresh(), 7200000)
+		this.#wsRef = this.#client.userData(this.#listenkey, this.#callback);
+		setTimeout(() => _this.#refresh(), 3600000)
 	}
 	#refresh() {
+		this.#disconnect();
 		this.#createListenKey();
 		this.#log(`Restart Socket`);
 	}
@@ -155,8 +156,11 @@ class Worker {
 	#error(msg) {
 		var d = new Date();
 		var n = d.toLocaleTimeString();
-		//console.log(`${n} user:[${this.label}] error:[${JSON.parse(msg)}]`)
-		console.log(msg)
+		console.log(
+			{
+				message: `${n} user:[${this.label}] [ error ]`,
+				error : msg
+			});
 	}
 	async #myWallet() {
 		try {

@@ -26,10 +26,34 @@ class App extends React.Component {
 				showAdminBoard: user.roles.includes("ROLE_ADMIN"),
 			});
 		}
+		
 	}
 
+	logOut() {
+		AuthService.logout();
+		this.setState({
+		  showModeratorBoard: false,
+		  showAdminBoard: false,
+		  currentUser: undefined,
+		});
+	}
+	
 	render() {
-		const { currentUser, showModeratorBoard, showAdminBoard } = this.state;
+		const { currentUser } = this.state;
+		const navsign = currentUser ? (
+			<Nav className="ms-auto">
+				<Link className="nav-link" to='/signin' onClick={this.logOut}>Sign Out</Link>
+			</Nav>
+		)
+			:
+			(
+				<Nav className="ms-auto">
+					<Link className="nav-link" to='/signin'>Sign in</Link>
+					<Link className="nav-link" to='/signup'>Sign up</Link>
+				</Nav>
+			);
+
+
 		return (
 			<Router>
 				<Navbar collapseOnSelect expand="lg" bg="primary" variant="dark">
@@ -37,20 +61,7 @@ class App extends React.Component {
 						<Navbar.Brand><Link className="nav-link" to='/'>React-Bootstrap</Link></Navbar.Brand>
 						<Navbar.Toggle aria-controls="responsive-navbar-nav" />
 						<Navbar.Collapse id="responsive-navbar-nav">
-							{
-								currentUser ? (
-									<Nav className="ms-auto">
-										<Link className="nav-link" to='/signin'>Sign Out</Link>
-									</Nav>
-								)
-									:
-									(
-										<Nav className="ms-auto">
-											<Link className="nav-link" to='/signin'>Sign in</Link>
-											<Link className="nav-link" to='/signup'>Sign up</Link>
-										</Nav>
-									)
-							}
+							{navsign}
 						</Navbar.Collapse>
 					</Container>
 				</Navbar>
@@ -64,7 +75,9 @@ class App extends React.Component {
 									<Route path="/signin" element={<Signin show={true} />} />
 									<Route path="/signup" element={<Signup show={true} />} />
 								</>
-							):(<></>)
+							):(<>
+								<Route path="/signout"element={<Signin show={true} />} />
+							</>)
 						}
 					</Routes>
 				</Container>

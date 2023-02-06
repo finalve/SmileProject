@@ -1,3 +1,3 @@
-module.exports = {
- api:'192.168.1.9'
+export const config = {
+ base:'192.168.1.9'
 }

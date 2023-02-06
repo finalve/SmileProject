@@ -144,13 +144,14 @@ class Arbitrage {
 						}];
 					await user.arbitrage({ data });
 				});
+				this.#getworker({ target ,compare, compare_invest, compare_profit,compare_pattern });
 				await Promise.all(tasks);
 			}
 		}
 		else if (compare > 100)
 		{
-			console.log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
-			this.#getworker({ target ,compare, compare_invest, compare_profit,compare_pattern });
+			//console.log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
+			
 		}
 	}
 
@@ -185,13 +186,14 @@ class Arbitrage {
 						}];
 					await user.arbitrage({ data });
 				});
+				this.#getworker({ target ,compare, compare_invest, compare_profit,compare_pattern });
 				await Promise.all(tasks);
 			}
 		}
-		else if (compare > 100)
+		if (compare > 100)
 		{
-			console.log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
-			this.#getworker({ target ,compare, compare_invest, compare_profit,compare_pattern });
+			//console.log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
+			
 		}
 	}
 

@@ -3,7 +3,6 @@ const Worker = require('../controllers/worker');
 const Instance = require('../controllers/instance');
 const data = require("../controllers/data");
 class socket {
-	#PORT = 5060;
 	#socket;
 	constructor(io) {
 		this.#socket = io;
@@ -80,6 +79,22 @@ class socket {
 						alive: foundWorker.alive,
 						pnl: parseFloat(foundWorker.pnl).toFixed(8),
 						orderOpen:foundWorker.openOrder
+					}
+				});
+			})
+
+			socket.on('history', (req, callback) => {
+				const foundWorker = Instance.worker.find((worker) => worker.label === req.label);
+				if (!foundWorker)
+					return callback({
+						status: 400,
+						message: `User not found`
+					});
+
+					return callback({
+					status: 200,
+					data: {
+						history:foundWorker.history
 					}
 				});
 			})

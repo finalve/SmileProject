@@ -44,7 +44,7 @@ class Signin extends React.Component {
 		
 		AuthService.login(this.state).then((res) => {
 
-			window.location.reload();
+			window.location.replace('/')
 		},
 			error => {
 				const resMessage =

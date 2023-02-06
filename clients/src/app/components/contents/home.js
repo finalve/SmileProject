@@ -1,58 +1,30 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import {api} from '../../config';
+import AuthService from "../../services/user.service";
+import {config} from '../../config';
+const fetchUser = async () =>{
+ const response = await 
+ console.log(response)
+}
 const Home = () => {
 	const [data, response] = useState();
 	const [user, setUser] = useState(null);
-	const fetchUsers = async () => {
-		const res = await axios({
-			method: 'get',
-			url: `http://${api}/api/`,
-
-		});
-
-		response(res.data)
-	}
-
-	useEffect(() => {
-		fetchUsers();
-	}, [user]);
+	AuthService.getUserBoard().then(res=>response(res.data.data))
+	
+	// useEffect(() => {
+	// 	const func = async ()=>{
+			
+	// 	}
+	// 	func().then(() =>console.log(data) )
+	// }, );
 	return (
 		<div>
-			<div className='text-end mt-5'>
-				<span className='navbar-refresh-icon'>X</span>
-			</div>
-			<div className='row bg-secondary text-light bg-gradient rounded-top text-center mb-3'>
-				<div className='col'>
-					<h2>Username</h2>
-				</div>
-				<div className='col'>
-					<h2>Status</h2>
-				</div>
-				<div className='col'>
-					<h2>Event</h2>
-				</div>
-			</div>
 			{
-				data ?
-					data.map((user, index) =>
-						<div className="row text-center" key={index}>
-							<div className='col'>
-								<p>{user.username}</p>
-							</div>
-							<div className='col'>
-								{user.status ? <p className='text-success'>Running</p> : <p className='text-danger'>Error</p>}
-							</div>
-							<div className='col'>
-								<button type="button" className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#view" onClick={() => setUser(user)}>
-									View
-								</button>
-							</div>
-						</div>
-					)
-					: <div className='text-center'><h1>Loading...</h1></div>
+				data&&
+				
+					data.label
+				
 			}
-			{<View users={user} />}
 		</div>
 	)
 }
@@ -172,7 +144,7 @@ const Remove = ({ username, close }) => {
 		if (data.username === username) {
 			axios({
 				method: 'post',
-				url: `http://${api}/api/delete`,
+				url: `http://${config.base}/api/delete`,
 				data: data
 			}).then((res) =>
 				console.log(res.data)

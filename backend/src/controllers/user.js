@@ -1,11 +1,12 @@
 const db = require("../models");
-const Socket = require('../socketio')
 const jwt = require('jsonwebtoken');
 var bcrypt = require("bcryptjs");
 const config = require('../../config')
-const socket = new Socket(config.socketSerect);
+
 const Role = db.role;
 const User = db.user;
+var socket = null;
+exports.instance = (_socket) => socket = _socket;
 exports.register = (req, res) => {
 	const { username,label, password } = req.body;
 
@@ -63,7 +64,7 @@ exports.login = (req, res) => {
 				return res.status(401).json({ error: 'Incorrect password' });
 			}
 
-			const token = jwt.sign({ label:user.label, username: user.username }, config.secret, { expiresIn: '1h' });
+			const token = jwt.sign({ label:user.label, username: user.username }, config.secret, { expiresIn: '24h' });
 			var authorities = [];
 
 			for (let i = 0; i < user.roles.length; i++) {
@@ -81,17 +82,23 @@ exports.login = (req, res) => {
 };
 
 exports.add = (req, res) => {
-	socket.add(req,res);
+	socket.response(req,res);
 };
 
 exports.delete = (req, res) => {
-	socket.delete(req,res);
-};
-
-exports.arbitrage = (req, res) => {
-	socket.arbitrage(req,res);
+	socket.response(req,res);
 };
 
 exports.userdata = (req, res) => {
-	socket.userdata(req,res);
+	socket.response(req,res);
 };
+
+// exports.arbitrage = (req, res) => {
+// 	socket.arbitrage(req,res);
+// };
+
+
+
+// exports.history = (req, res) => {
+// 	socket.history(req,res);
+// };

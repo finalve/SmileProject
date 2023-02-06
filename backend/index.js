@@ -2,19 +2,38 @@ const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors')
 const userRoutes = require('./src/routes/user');
+const userSocket = require('./src/controllers/user');
 const config = require('./config');
 const db = require("./src/models");
+const socketio = require('socket.io');
+
+const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = 8080;
+var {Socket} = require('./src/websocket/socket')
 app.use(express.json());
 app.use(cors());
-app.listen(PORT, () => console.log(`app listening on port ${PORT}!`));
+const server = app.listen(PORT, () => console.log(`app listening on port ${PORT}!`));
+const io = socketio(server);
+
+// io.use((socket, next) => {
+// 	const token = socket.handshake.query.token;
+// 	jwt.verify(token, config.serect, (err, decoded) => {
+// 		if (err) {
+// 			return next(new Error('authentication error'));
+// 		}
+// 		socket.decoded = decoded;
+// 		next();
+// 	});
+// });
+
 app.use('/api', userRoutes);
 
 const Role = db.role;
 mongoose.connect(`mongodb://${config.root}:${config.pwd}@${config.host}:${config.port}/${config.db}`, { useNewUrlParser: true }).then(() => {
 	console.log("Successfully connect to MongoDB.");
 	initial();
+	userSocket.instance( new Socket(io));
 })
 	.catch(err => {
 		console.error("Connection error", err);

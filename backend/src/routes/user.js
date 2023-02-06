@@ -7,9 +7,10 @@ router.post('/register', [
 	verifySignUp.checkRolesExisted,
 	validateReqBody(['label', 'username', 'password'])
 ], userCtrl.register);
-router.post('/login', userCtrl.login);
+router.post('/signin', userCtrl.login);
 router.post('/add', [authJwt.verifyToken], userCtrl.add);
 router.post('/delete', [authJwt.verifyToken], userCtrl.delete);
-router.get('/arbitrage', [authJwt.verifyToken], userCtrl.arbitrage);
 router.get('/userdata', [authJwt.verifyToken], userCtrl.userdata);
+// router.get('/arbitrage', [authJwt.verifyToken], userCtrl.arbitrage);
+// router.get('/history', [authJwt.verifyToken], userCtrl.history);
 module.exports = router;
