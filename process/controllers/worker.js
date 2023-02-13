@@ -10,6 +10,7 @@ class Worker {
 		this.apikey = apikey;
 		this.#serect = apiserect;
 		this.Invesment = 0;
+		this.BNB = 0;
 		this.ipr = invest >= 11 ? invest : 11;
 		this.takeOrder = 0;
 		this.orderLength = 5;
@@ -28,6 +29,7 @@ class Worker {
 	async arbitrage({ data }, callback) {
 		if (this.#started)
 			if (this.Invesment > this.ipr)
+			if(this.BNB > 0)
 				if (this.openOrder.length < this.orderLength) {
 					try {
 						const userIPR = callback(this.ipr);
@@ -81,10 +83,15 @@ class Worker {
 				};
 				try {
 					const stable = json.symbol.find(x => x.a === 'USDT')
+					const BNB = json.symbol.find(x => x.a === 'BNB')
 					if (!stable.f)
 						return
 					this.Invesment = parseFloat(stable.f)
 					this.#log(`balance of ${this.Invesment} USDT`)
+					if (!BNB.f)
+					return
+					this.BNB = parseFloat(BNB.f)
+					this.#log(`balance of ${this.BNB} bnb`)
 
 				} catch (error) {
 					this.#error(`${error.response}`)
@@ -128,7 +135,10 @@ class Worker {
 									try {
 										const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data.userIPR.quantity, order.data[2].price)
 										if (!response.data)
+										{
+											this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
 											return
+										}
 										order.response = {
 											symbol: response.data.symbol,
 											orderId: response.data.orderId,
@@ -144,7 +154,10 @@ class Worker {
 									try {
 										const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[3].price)
 										if (!response.data)
+										{
+											this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
 											return
+										}
 										order.response = {
 											symbol: response.data.symbol,
 											orderId: response.data.orderId,
@@ -178,7 +191,11 @@ class Worker {
 									try {
 										const response = await this.#newOrder(order.data[2].symbol, 'BUY', order.data.userIPR.target_quantity, order.data[2].price)
 										if (!response.data)
+										{
+											this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
 											return
+										}
+											
 										order.response = {
 											symbol: response.data.symbol,
 											orderId: response.data.orderId,
@@ -195,7 +212,10 @@ class Worker {
 									try {
 										const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[3].price)
 										if (!response.data)
+										{
+											this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
 											return
+										}
 										order.response = {
 											symbol: response.data.symbol,
 											orderId: response.data.orderId,
@@ -263,8 +283,11 @@ class Worker {
 		try {
 			const response = await this.#client.userAsset();
 			const stable = response.data.find(x => x.asset === 'USDT');
+			const bnb = response.data.find(x => x.asset === 'BNB');
 			this.Invesment = parseFloat(stable.free);
+			this.BNB = parseFloat(bnb.free);
 			this.#log(`balance of ${this.Invesment} USDT`)
+			this.#log(`balance of ${this.BNB} BNB`)
 			return response.data
 		} catch (error) {
 			console.log('wallet error')

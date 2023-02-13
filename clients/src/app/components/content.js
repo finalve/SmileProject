@@ -153,7 +153,7 @@ const Content = (prop) => {
 									<div className='p-2 w-25 border text-light text-center'>Symbol</div>
 									<div className='p-2 w-25 border text-light text-center'>Profit</div>
 								</div>
-								{data.orderOpen.reverse().map((element, index) =>
+								{data.orderOpen.map((element, index) =>
 								(<div className='d-flex justify-content-center bg-secondary bg-opacity-75' key={index}>
 									<div className='p-2 w-25 border text-light text-start'>{element.data[1].symbol} {element.data[2].symbol} {element.data[3].symbol}</div>
 									<div className='p-2 w-25 border text-light text-center'>{element.response.status}</div>
@@ -181,7 +181,7 @@ const Content = (prop) => {
 							<Form.Label>API SERECT</Form.Label>
 							<Form.Control type="password" placeholder="Enter Serect" name='apiserect' value={apiData.apiserect} onChange={setInput} />
 							<Form.Text className="text-muted">
-								Add IP Address to Binance API Management ** 192.168.1.92
+								Add IP Address to Binance API Management ** 171.6.140.125
 							</Form.Text>
 						</Form.Group>
 
