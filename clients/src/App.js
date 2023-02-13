@@ -1,27 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Button, Form } from 'react-bootstrap';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import AuthService from "./app/services/auth.service";
-import { Signin, Home, Signup, Dashboard } from './app/components';
+import { Signin, Content, Signup } from './app/components';
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle';
 import './App.css';
-
+const userDefault = {
+	showModeratorBoard: false,
+	showAdminBoard: false,
+	currentUser: undefined,
+}
 const logOut = (state) => {
 	AuthService.logout();
-	state({
-		showModeratorBoard: false,
-		showAdminBoard: false,
-		currentUser: undefined,
-	});
+	state(userDefault);
 }
 
 const App = () => {
-	const [state, setState] = useState({
-		showModeratorBoard: false,
-		showAdminBoard: false,
-		currentUser: undefined,
-	});
+	const [state, setState] = useState(userDefault);
 
 	const [login, setLogin] = useState(false);
 	const [signup, setSignup] = useState(false);
@@ -52,7 +47,7 @@ const App = () => {
 		);
 	return (<div className='font-monospace'>
 		<Navbar collapseOnSelect expand="lg" bg="primary" variant="dark">
-			<Navbar.Brand><Button variant="primary" onClick={()=>window.location.reload()}>Style-V</Button></Navbar.Brand>
+			<Navbar.Brand><Button variant="primary" onClick={() => window.location.reload()}>Style-V</Button></Navbar.Brand>
 			<Navbar.Toggle aria-controls="responsive-navbar-nav" />
 			<Navbar.Collapse id="responsive-navbar-nav">{navBar}</Navbar.Collapse>
 		</Navbar>
@@ -61,16 +56,19 @@ const App = () => {
 				(
 					<Signin show={login} state={setState} />
 				)}
-				{signup && (
+			{signup &&
+				(
 					<Signup show={signup} state={setState} />
 				)}
 			{currentUser ?
 				(
-					<Home logOut={logOut} state={setState}/>
+					<Content logOut={logOut} state={setState} />
 				)
 				:
 				(
-					<Dashboard />
+					<div style={{ fontSize: "5vw" }} >
+						Welcome To Project By Style-V
+					</div>
 				)
 			}
 		</Container>

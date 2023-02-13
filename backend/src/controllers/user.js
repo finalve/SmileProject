@@ -7,6 +7,11 @@ const Role = db.role;
 const User = db.user;
 
 var socket = null;
+const log = (ip,msg) =>{
+	var d = new Date();
+		var n = d.toLocaleTimeString();
+		console.log(`${n} IP:[${ip}] message:[${msg}]`)
+}
 exports.instance = (_socket) => socket = _socket;
 exports.register = (req, res) => {
 	const { username, label, password } = req.body;
@@ -35,7 +40,8 @@ exports.register = (req, res) => {
 				if (err) {
 					return res.status(500).json({ message: err });
 				}
-				const token = jwt.sign({ label: newUser.label, username: newUser.username, userId: newUser._id }, config.secret, { expiresIn: '24h' });
+				log(req.headers["x-real-ip"],`user [${newUser.label} register]`);
+				const token = jwt.sign({ label: newUser.label, username: newUser.username, userId: newUser._id }, config.secret, { expiresIn: '6h' });
 				var authorities = [];
 				authorities.push("ROLE_" + role.name.toUpperCase());
 				res.status(200).json({
@@ -73,13 +79,15 @@ exports.login = (req, res) => {
 				return res.status(401).json({ message: 'Incorrect password' });
 			}
 
-			const token = jwt.sign({ label: user.label, username: user.username, userId: user._id }, config.secret, { expiresIn: '1m' });
+			const token = jwt.sign({ label: user.label, username: user.username, userId: user._id }, config.secret, { expiresIn: '6h' });
 			var authorities = [];
 
 			for (let i = 0; i < user.roles.length; i++) {
 				authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
 			}
+			log(req.headers["x-real-ip"],`user [${user.label} login]`);
 			res.status(200).json({
+				ip:req.headers["x-real-ip"],
 				userId: user._id,
 				label: user.label,
 				username: user.username,
@@ -90,10 +98,12 @@ exports.login = (req, res) => {
 };
 
 exports.add = (req, res) => {
+	log(req.headers["x-real-ip"],`user [${req.body.label} add worker]`);
 	socket.response(req, res);
 };
 
 exports.delete = (req, res) => {
+	log(req.headers["x-real-ip"],`user :: ${req.body.label} delete worker]`);
 	socket.response(req, res);
 };
 
@@ -102,6 +112,7 @@ exports.userdata = (req, res) => {
 };
 
 exports.edit = (req, res) => {
+	log(req.headers["x-real-ip"],`user [${req.body.label} edit worker]`);
 	socket.response(req, res);
 };
 

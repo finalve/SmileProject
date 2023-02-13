@@ -5,32 +5,33 @@ const userRoutes = require('./src/routes/user');
 const userSocket = require('./src/controllers/user');
 const config = require('./config');
 const db = require("./src/models");
-const socketio = require('socket.io');
+const {Server} = require('socket.io');
 
 const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = 8080;
-var {Socket} = require('./src/websocket/socket')
+var {Socket} = require('./src/websocket')
 app.use(express.json());
 app.use(cors());
 const server = app.listen(PORT, () => console.log(`app listening on port ${PORT}!`));
-const io = socketio(server);
 
-// io.use((socket, next) => {
-// 	const token = socket.handshake.query.token;
-// 	jwt.verify(token, config.serect, (err, decoded) => {
-// 		if (err) {
-// 			return next(new Error('authentication error'));
-// 		}
-// 		socket.decoded = decoded;
-// 		next();
-// 	});
-// });
+const io = new Server(server, {
+	path: "/socket"
+  });
+io.use((socket, next) => {
+	const token = socket.handshake.query.token;
+	jwt.verify(token, config.socketSerect, (err, decoded) => {
+		if (err) {
+			return next(new Error('authentication error'));
+		}
+		socket.decoded = decoded;
+		next();
+	});
+});
 
 app.use('/api', userRoutes);
 
 const Role = db.role;
-//mongoose.connect(`mongodb://${config.root}:${config.pwd}@${config.host}:${config.port}/${config.db}`, { useNewUrlParser: true }).then(() => {
 	mongoose.connect(`mongodb+srv://${config.root}:${config.pwd}@cluster0.2hz2bzb.mongodb.net/${config.db}`, { useNewUrlParser: true }).then(() => {
 	console.log("Successfully connect to MongoDB.");
 	initial();
@@ -72,6 +73,16 @@ function initial() {
 				}
 
 				console.log("added 'admin' to roles collection");
+			});
+
+			new Role({
+				name: "server"
+			}).save(err => {
+				if (err) {
+					console.log("error", err);
+				}
+
+				console.log("added 'server' to roles collection");
 			});
 		}
 	});

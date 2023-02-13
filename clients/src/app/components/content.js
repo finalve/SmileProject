@@ -1,7 +1,5 @@
-import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import AuthService from "../../services/user.service";
-import { config } from '../../config';
+import AuthService from "../services/user.service";
 import { Button, Form, Modal } from 'react-bootstrap';
 
 const submitAdd = (apiData) => {
@@ -18,8 +16,7 @@ const parseJwt = (token) => {
 		return null;
 	}
 };
-const Home = (prop) => {
-	const [logout, setLogout] = useState(prop);
+const Content = (prop) => {
 	const [data, response] = useState();
 	const [time, setTime] = useState(null);
 	const [apiData, setData] = useState({
@@ -31,7 +28,8 @@ const Home = (prop) => {
 	const handleClose = () => setShow(false);
 	const handleShow = () => setShow(true);
 	const [loaded, Loading] = useState(false);
-
+	const [timerUser, setUsertimer] = useState(false);
+	const [timerAlive, setAlivetimer] = useState(false);
 	const setInput = (e) => {
 		const { name, value } = e.target;
 		setData((prev) => {
@@ -46,34 +44,41 @@ const Home = (prop) => {
 			response(res.data.data);
 		}, error => {
 			if (error.response.data?.status === 1022) {
-				logout.logOut(logout.state);
+				prop.logOut(prop.state);
 			}
 			console.log(error.response.data)
 
 		})
-		setInterval(() => {
-			AuthService.getUserBoard().then((res) => {
-				response(res.data.data);
-			}, error => {
-				if (error.response.data?.status === 1022) {
-					logout.logOut(logout.state);
-				}
-			})
-		}, 10000);
-	}, [loaded]);
-	useEffect(() => {
-		if (data) {
+		if(!timerUser){
+			setUsertimer(true);
 			setInterval(() => {
-				setTime(timeConvert(data.alive))
+				AuthService.getUserBoard().then((res) => {
+					response(res.data.data);
+				}, error => {
+					if (error.response.data?.status === 1022) {
+						prop.logOut(prop.state);
+					}
+				})
 				const user = JSON.parse(localStorage.getItem("user"));
 				if (user) {
 					const decodedJwt = parseJwt(user.accessToken);
-
+	
 					if (decodedJwt.exp * 1000 < Date.now()) {
-						logout.logOut(logout.state);
+						prop.logOut(prop.state);
 					}
 				}
-			}, 1000);
+			}, 10000);
+		}
+	}, [loaded]);
+	useEffect(() => {
+		if (data) {
+			if(!timerAlive)
+			{
+				setAlivetimer(true);
+				setInterval(() => {
+					setTime(timeConvert(data.alive))
+				}, 1000);
+			}
 		}
 	}, [data]);
 	return (
@@ -150,7 +155,7 @@ const Home = (prop) => {
 								</div>
 								{data.orderOpen.reverse().map((element, index) =>
 								(<div className='d-flex justify-content-center bg-secondary bg-opacity-75' key={index}>
-									<div className='p-2 w-25 border text-light text-start'>{element.data[1].symbol}→{element.data[2].symbol}→{element.data[3].symbol}</div>
+									<div className='p-2 w-25 border text-light text-start'>{element.data[1].symbol} {element.data[2].symbol} {element.data[3].symbol}</div>
 									<div className='p-2 w-25 border text-light text-center'>{element.response.status}</div>
 									<div className='p-2 w-25 border text-light text-center'>{element.response.symbol}</div>
 									<div className='p-2 w-25 border text-light text-center'>{element.data[0].result} %</div>
@@ -221,71 +226,4 @@ const timeConvert = (time) => {
 	return `Day ${days} / ${hours}:${minutes}:${seconds} Hour`
 }
 
-const Remove = ({ username, close }) => {
-	const [data, setData] = useState(
-		{
-			username: '',
-			password: '',
-		});
-	const clean = () => {
-		setData({
-			username: '',
-			password: '',
-		});
-		close(null)
-	}
-	const setInput = (e) => {
-		const { name, value } = e.target;
-		setData((prev) => {
-			return {
-				...prev,
-				[name]: value
-			}
-		})
-	}
-	const post = () => {
-		if (data.username === username) {
-			axios({
-				method: 'post',
-				url: `http://${config.base}/api/delete`,
-				data: data
-			}).then((res) =>
-				console.log(res.data)
-			)
-		}
-	}
-	return (
-		<div >
-			<div className="modal fade" id="remove" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabIndex="-1">
-				<div className="modal-dialog modal-dialog-centered">
-					<div className="modal-content">
-						<div className="modal-header">
-							<h5 className="modal-title" id="exampleModalLabel">Confirm Remove</h5>
-							<button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={clean}></button>
-						</div>
-						<div className="modal-body">
-							<div className="input-group mb-3">
-								<div className="input-group-prepend w-25">
-									<span className="input-group-text w-100">Username</span>
-								</div>
-								<input type="text" className="form-control" aria-label="Username" aria-describedby="basic-addon1" name='username' value={data.username} onChange={setInput} />
-							</div>
-							<div className="input-group mb-3">
-								<div className="input-group-prepend w-25">
-									<span className="input-group-text w-100">Password</span>
-								</div>
-								<input type="password" className="form-control" aria-label="Username" aria-describedby="basic-addon1" name='password' value={data.password} onChange={setInput} />
-							</div>
-						</div>
-						<div className="modal-footer">
-							<button type="button" className="btn btn-secondary" data-bs-dismiss="modal" onClick={clean}>Close</button>
-							<button type="button" className="btn btn-danger" onClick={post} data-bs-dismiss="modal">Confirm</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	)
-}
-
-export default Home;
+export default Content;

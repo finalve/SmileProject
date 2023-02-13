@@ -1,75 +1,59 @@
-const socket = require("socket.io-client");
-const jwt = require('jsonwebtoken');
-const { withTimeout } = require("../middlewares");
+var bcrypt = require("bcryptjs");
 class Socket {
 	#socket;
-	constructor(serect){
-		const token = jwt.sign({ user: 'yourusername' }, serect);
-		console.log(token);
-		this.#socket = socket.connect('http://localhost:6060', { query: { token } });
-		this.#socket.on('authenticated', (e) => {
-			console.log(e);
+	#clients = [];
+	constructor(io) {
+		this.#socket = io;
+		this.users = [];
+		this.clientResponse = new Map();
+		console.log(`Socket Server Started `)
+		this.#socket.on('connection', (socket) => {
+			const clientsCount = this.#socket.engine.clientsCount;
+			socket.emit('authenticated',`server-${clientsCount} connected`)
+			console.log(`server-${clientsCount} connected`);
+			this.#clients.push({
+				name: `server-${clientsCount}`,
+				id: socket.id
+			})
+
+			socket.on('disconnect', () => {
+				const FoundServer = this.#clients.find(server => server.id === socket.id);
+				this.#clients = this.#clients.filter(server => server !== FoundServer);
+				console.log(`${FoundServer.name} Disconnected`);
+			});
+
+			socket.on('add', (res) => {
+				this.clientResponse.set(res.id, res);
+			});
+
+			socket.on('delete', (res) => {
+				this.clientResponse.set(res.id, res);
+			});
+
+			socket.on('userdata', (res) => {
+				this.clientResponse.set(res.id, res);
+			});
+
+			socket.on('edit', (res) => {
+				this.clientResponse.set(res.id, res);
+			});
 		});
-		this.#socket.on('system', (message) => {
-			console.log(message);
-		});
-
-		this.#socket.on('pong',(message) =>{
-			console.log(message)
-		})
-
-		this.#socket.on('close',(message) =>{
-			console.log(message)
-		})
 	}
-
-	add(req,res){
-		this.#socket.emit('add',req.body,withTimeout((response)=> {
-			return res.status(response.status).json(response);
-		  },()=>{
-			return res.status(500).json({message:'Internal Server Error'})
-		  },1000)
-		  );
+	response(req, res) {
+		req.body._id = bcrypt.hashSync(`${Math.random()}`, 8)
+		this.#socket.to(this.#clients[0]?.id).emit(`${req.path.replace('/', '')}`, req.body)
+		setTimeout(() => {
+			const response = this.clientResponse.get(req.body._id);
+			if (!response)
+				return res.status(500).json({status:500, message: 'Internal Server Error' })
+			this.clientResponse.delete(req.body._id)
+			return res.status(response.status)
+				.json({
+					status: response?.status,
+					message: response?.message,
+					data: response?.data
+				});
+		}, 750);
 	}
-
-	delete(req,res){
-		this.#socket.emit('delete',req.body,withTimeout((response)=> {
-			return res.status(response.status).json(response);
-		  },()=>{
-			return res.status(500).json({message:'Internal Server Error'})
-		  },1000)
-		  );
-	}
-
-	arbitrage(_,res){
-		this.#socket.emit('arbitrage',_.body,withTimeout((response)=> {
-			return res.status(response.status).json(response);
-		  },()=>{
-			return res.status(500).json({message:'Internal Server Error'})
-		  },1000)
-		  );
-	}
-
-	userdata(req,res){
-		this.#socket.emit('userdata',req.body,withTimeout((response)=> {
-			return res.status(response.status).json(response);
-		  },()=>{
-			return res.status(500).json({message:'Internal Server Error'})
-		  },1000)
-		  );
-	}
-
-	history(req,res){
-		this.#socket.emit('history',req.body,withTimeout((response)=> {
-			return res.status(response.status).json(response);
-		  },()=>{
-			return res.status(500).json({message:'Internal Server Error'})
-		  },1000)
-		  );
-	}
-
-
 }
-
-module.exports = Socket;
-
+module.exports = { Socket };

@@ -240,6 +240,7 @@ class Worker {
 			this.#log(`Restart Socket`);
 		}
 		else {
+			this.#started = false;
 			this.#error(`Status False!`);
 		}
 	}

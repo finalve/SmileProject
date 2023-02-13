@@ -1,12 +1,14 @@
 const socket = require("socket.io-client");
 const Worker = require('../controllers/worker');
 const Instance = require('../controllers/instance');
+const config = require('../config')
+const jwt = require('jsonwebtoken');
 class Socket {
 	#socket;
 	constructor(){
-		//const token = jwt.sign({ user: 'yourusername' }, serect);
-		//this.#socket = socket.connect('http://localhost:6060', { query: { token } });
-		this.#socket = socket.connect('http://localhost:8080');
+		const token = jwt.sign({ user: 'server-1' }, config.serect);
+		//this.#socket = socket.connect('http://localhost:8080', { path :'/socket', query: { token } });
+		this.#socket = socket.connect('http://103.252.119.56/', { path :'/socket', query: { token } });
 		this.#socket.on('authenticated', (res) => {
 			console.log(res);
 		});
