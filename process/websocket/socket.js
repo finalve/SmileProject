@@ -52,6 +52,28 @@ class Socket {
 			return this.#log(`Worker ${req.label} deleted successfully! ${Instance.worker.length}`);
 		});
 
+		this.#socket.on(('edit'), (req) => {
+			const foundWorker = Instance.worker.find((worker) => worker.label === req.label);
+			if (!foundWorker) {
+				this.#socket.emit('edit',{
+					status: 400,
+					id:req._id,
+					message: `User not found`
+				});
+				return this.#log('User not found');
+			}
+			
+			foundWorker.ipr = req.ipr;
+			foundWorker.orderLength = req.opl;
+			this.#socket.emit('edit',{
+				status: 200,
+				id:req._id,
+				message: `Worker ${req.label} edit successfully!`,
+				data:foundWorker
+			});
+			return this.#log(`Worker ${req.label} edit successfully! ${Instance.worker.length}`);
+		});
+
 		this.#socket.on('userdata', (req) => {
 			const foundWorker = Instance.worker.find((worker) => worker.label === req.label);
 			if (!foundWorker)
@@ -66,14 +88,19 @@ class Socket {
 				id:req._id,
 				data: {
 					label: foundWorker.label,
-					status: foundWorker.status,
+					status: foundWorker.status(),
+					error:foundWorker.errorMessage,
 					maxlen: foundWorker.orderLength,
 					len: foundWorker.openOrder.length,
 					invesment: foundWorker.Invesment,
 					ipr: foundWorker.ipr,
 					alive: foundWorker.alive,
 					pnl: parseFloat(foundWorker.pnl).toFixed(8),
+					btc: parseFloat(foundWorker.btc).toFixed(8),
+					takeOrder:foundWorker.takeOrder,
+					success:foundWorker.success,
 					orderOpen:foundWorker.openOrder
+					
 				}
 			});
 		})

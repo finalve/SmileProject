@@ -1,6 +1,6 @@
 module.exports = {
 	root:'oIuern',
-	pwd:'POfd54',
+	pwd:'ix7iwoQGYmSDqzDh',//POfd54
 	host:'localhost',
 	port:27018,
 	db:'user_arbitrage',

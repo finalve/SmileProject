@@ -1,3 +1,4 @@
+var bcrypt = require("bcryptjs");
 class Socket {
 	#socket;
 	#clients = [];
@@ -5,6 +6,7 @@ class Socket {
 		this.#socket = io;
 		this.users = [];
 		this.clientResponse = new Map();
+		console.log(`Socket Server Started`)
 		this.#socket.on('connection', (socket) => {
 			const clientsCount = this.#socket.engine.clientsCount;
 			console.log(`server-${clientsCount} connected`);
@@ -30,10 +32,14 @@ class Socket {
 			socket.on('userdata', (res) => {
 				this.clientResponse.set(res.id, res);
 			});
+
+			socket.on('edit', (res) => {
+				this.clientResponse.set(res.id, res);
+			});
 		});
 	}
 	response(req, res) {
-		req.body._id = `${Math.random()}`
+		req.body._id = `${bcrypt.hashSync(Math.random(), 8)}`
 		this.#socket.to(this.#clients[0]?.id).emit(`${req.path.replace('/', '')}`, req.body)
 		setTimeout(() => {
 			const response = this.clientResponse.get(req.body._id);
@@ -46,7 +52,7 @@ class Socket {
 					message: response?.message,
 					data: response?.data
 				});
-		}, 250);
+		}, 100);
 	}
 }
 module.exports = { Socket };

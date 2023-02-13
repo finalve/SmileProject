@@ -5,11 +5,13 @@ class Worker {
 	#listenkey;
 	#started = false;
 	#serect;
-	constructor({ label, apikey, apiserect }) {
+	constructor({ label, apikey, apiserect, invest }) {
 		this.label = label;
 		this.apikey = apikey;
 		this.#serect = apiserect;
 		this.Invesment = 0;
+		this.ipr = invest >= 11 ? invest : 11;
+		this.takeOrder = 0;
 		this.orderLength = 5;
 		this.openOrder = [];
 		this.#client = new Spot(this.apikey, this.#serect);
@@ -17,25 +19,34 @@ class Worker {
 		this.#createListenKey();
 		this.alive = new Date().getTime();
 		this.pnl = 0;
+		this.btc = 0;
 		this.history = [];
 		this.#loopCheck();
+		this.success = [];
+		this.errorMessage = 'Wait Connecting to Server';
 	}
-
-	async arbitrage({ data }) {
+	async arbitrage({ data }, callback) {
 		if (this.#started)
-			if (this.Invesment > data[0].invest)
+			if (this.Invesment > this.ipr)
 				if (this.openOrder.length < this.orderLength) {
+					try {
+						const userIPR = callback(this.ipr);
+						data.userIPR = userIPR;
+						const response = await this.#newOrder(data[1].symbol, 'BUY', userIPR.quantity, data[1].price)
+						if (!response.data)
+							return
+						this.openOrder.push({
+							data: data, response:
+							{
+								symbol: response.data.symbol,
+								orderId: response.data.orderId
+							}
+						});
+					} catch (error) {
+						console.log(error)
+						this.#started = false;
+					}
 
-					const response = await this.#newOrder(data[1].symbol, 'BUY', data[1].quantity, data[1].price)
-					if (!response.data)
-						this.#error(response);
-					this.openOrder.push({
-						data: data, response:
-						{
-							symbol: response.data.symbol,
-							orderId: response.data.orderId
-						}
-					});
 				}
 	}
 	#callback = {
@@ -56,6 +67,7 @@ class Worker {
 					signal: response.S,
 					price: response.p,
 					quote: response.Z,
+					quantity: response.Q,
 					execution_type: response.x,
 					currentOrder: response.X,
 					orderId: response.i
@@ -70,7 +82,7 @@ class Worker {
 				try {
 					const stable = json.symbol.find(x => x.a === 'USDT')
 					if (!stable.f)
-						this.#error(`${stable}`)
+						return
 					this.Invesment = parseFloat(stable.f)
 					this.#log(`balance of ${this.Invesment} USDT`)
 
@@ -103,56 +115,97 @@ class Worker {
 							if (order.data[0].pattern === "A") {
 								if (order.response.symbol === 'BTCUSDT') {
 									this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
-									this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${json.quote / order.data[0].invest * 100 - 100} %`);
-									this.pnl += json.quote - order.data[0].invest
+									let lot_btc = order.data.userIPR.true_quantity > 0 ? order.data.userIPR.true_quantity - json.quantity :0;
+									let lot_usdt = lot_btc * order.data[3].price;
+									let profit = (json.quote + lot_usdt) - order.data.userIPR.invest;
+									this.pnl += profit;
+									this.btc += lot_btc;
+									this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
+									this.#pushSuccess(`Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
+									this.takeOrder += 1;
 								}
 								else if (order.response.symbol.includes('USDT')) {
-									const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data[2].quantity, order.data[2].price)
-									if (!response.data)
-										this.#error(response);
-									order.response = {
-										symbol: response.data.symbol,
-										orderId: response.data.orderId,
-										status: response.data.status,
-										origQty: response.data.origQty
+									try {
+										const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data.userIPR.quantity, order.data[2].price)
+										if (!response.data)
+											return
+										order.response = {
+											symbol: response.data.symbol,
+											orderId: response.data.orderId,
+											status: response.data.status,
+											origQty: response.data.origQty
+										}
+									}
+									catch (error) {
+										this.#started = false;
+										this.#error(error);
 									}
 								} else if (order.response.symbol.includes('BTC')) {
-									const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data[3].quantity, order.data[3].price)
-									if (!response.data)
-										this.#error(response);
-									order.response = {
-										symbol: response.data.symbol,
-										orderId: response.data.orderId,
-										status: response.data.status,
-										origQty: response.data.origQty
+									try {
+										const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[3].price)
+										if (!response.data)
+											return
+										order.response = {
+											symbol: response.data.symbol,
+											orderId: response.data.orderId,
+											status: response.data.status,
+											origQty: response.data.origQty
+										}
+									}
+									catch (error) {
+										this.#started = false;
+										this.#error(error);
 									}
 								}
 							} else if (order.data[0].pattern === "B") {
 								if (order.response.symbol.includes('USDT') && order.response.symbol !== 'BTCUSDT') {
 									this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
-									this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${json.quote / order.data[0].invest * 100 - 100} %`);
-									this.pnl += json.quote - order.data[0].invest
+									let lot_btc = order.data.userIPR.true_quantity > 0 ? order.data.userIPR.quantity - order.data.userIPR.true_quantity : 0;
+									let lot_usdt = lot_btc * order.data[1].price;
+									let profit = (json.quote+lot_usdt) - order.data.userIPR.invest;
+									console.log(lot_btc)
+									console.log(lot_usdt)
+									console.log(order.data[1].price)
+									console.log(order.data.userIPR)
+									this.btc += lot_btc;
+									this.pnl += profit
+
+									this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
+									this.#pushSuccess(`Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
+									this.takeOrder += 1;
 								}
 								else if (order.response.symbol === 'BTCUSDT') {
-									const response = await this.#newOrder(order.data[2].symbol, 'BUY', order.data[2].quantity, order.data[2].price)
-									if (!response.data)
-										this.#error(response);
-									order.response = {
-										symbol: response.data.symbol,
-										orderId: response.data.orderId,
-										status: response.data.status,
-										origQty: response.data.origQty
+									try {
+										const response = await this.#newOrder(order.data[2].symbol, 'BUY', order.data.userIPR.target_quantity, order.data[2].price)
+										if (!response.data)
+											return
+										order.response = {
+											symbol: response.data.symbol,
+											orderId: response.data.orderId,
+											status: response.data.status,
+											origQty: response.data.origQty
+										}
+									}
+									catch (error) {
+										this.#started = false;
+										this.#error(error);
 									}
 								}
 								else if (order.response.symbol.includes('BTC')) {
-									const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data[3].quantity, order.data[3].price)
-									if (!response.data)
-										this.#error(response);
-									order.response = {
-										symbol: response.data.symbol,
-										orderId: response.data.orderId,
-										status: response.data.status,
-										origQty: response.data.origQty
+									try {
+										const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[3].price)
+										if (!response.data)
+											return
+										order.response = {
+											symbol: response.data.symbol,
+											orderId: response.data.orderId,
+											status: response.data.status,
+											origQty: response.data.origQty
+										}
+									}
+									catch (error) {
+										this.#started = false;
+										this.#error(error);
 									}
 								}
 							}
@@ -166,6 +219,14 @@ class Worker {
 		})
 		this.#loopCheck();
 	}
+	#pushSuccess(msg) {
+		let d = new Date();
+		let n = d.toLocaleTimeString();
+		let message = `${n} ${msg}`
+		if (this.success > 100)
+			this.success.shift();
+		this.success.push(message);
+	}
 	#report() {
 		const _this = this;
 		this.#wsRef = this.#client.userData(this.#listenkey, this.#callback);
@@ -173,9 +234,14 @@ class Worker {
 	}
 	#refresh() {
 		this.#disconnect();
-		this.#client = new Spot(this.apikey, this.#serect);
-		this.#createListenKey();
-		this.#log(`Restart Socket`);
+		if (this.#started) {
+			this.#client = new Spot(this.apikey, this.#serect);
+			this.#createListenKey();
+			this.#log(`Restart Socket`);
+		}
+		else {
+			this.#error(`Status False!`);
+		}
 	}
 	#log(msg) {
 		var d = new Date();
@@ -200,7 +266,10 @@ class Worker {
 			this.#log(`balance of ${this.Invesment} USDT`)
 			return response.data
 		} catch (error) {
+			console.log('wallet error')
+			this.#started = false;
 			this.#error(error.response.data);
+			this.errorMessage = error.response.data?.msg;
 		}
 	}
 	async #newOrder(symbol, signal, quantity, price) {
@@ -213,6 +282,8 @@ class Worker {
 				});
 			return response;
 		} catch (error) {
+			this.errorMessage = error.response.data?.msg;
+			this.#error(error.response.data)
 			return error;
 		}
 	}
@@ -221,10 +292,10 @@ class Worker {
 			const response = await this.#client.createListenKey()
 			this.#listenkey = response.data.listenKey;
 			this.#report();
-			this.status = true;
 		} catch (error) {
+			this.#started = false;
 			console.log(error.response.data)
-			this.status = false;
+			this.errorMessage = error.response.data?.msg
 		}
 	}
 

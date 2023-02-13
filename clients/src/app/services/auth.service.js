@@ -1,38 +1,46 @@
 import axios from "axios";
-import {config} from "../config";
-
+import { config } from "../config";
+import authHeader from './auth-header';
 const API_URL = `http://${config.base}/api/`;
 class AuthService {
-  login({username, password}) {
-    return axios
-      .post(API_URL + "signin", {
-        username,
-        password
-      })
-      .then(response => {
-        if (response.data.accessToken) {
-          localStorage.setItem("user", JSON.stringify(response.data));
-        }
+	login({ username, password }) {
+		return axios
+			.post(API_URL + "signin", {
+				username,
+				password
+			})
+			.then(response => {
+				if (response.data.accessToken) {
+					localStorage.setItem("user", JSON.stringify(response.data));
+				}
 
-        return response.data;
-      });
-  }
+				return response.data;
+			});
+	}
 
-  logout() {
-    localStorage.removeItem("user");
-  }
+	logout() {
+		axios.delete(API_URL + "logout", { headers: authHeader() });
+		localStorage.removeItem("user");
+		window.location.reload();
+	}
 
-  register(username, email, password) {
-    return axios.post(API_URL + "signup", {
-      username,
-      email,
-      password
-    });
-  }
+	signup({label,username, password,re_password}) {
+		return axios.post(API_URL + "signup", {
+			label,
+			username,
+			password
+		}).then(response => {
+			if (response.data.accessToken) {
+				localStorage.setItem("user", JSON.stringify(response.data));
+			}
 
-  getCurrentUser() {
-    return JSON.parse(localStorage.getItem('user'));;
-  }
+			return response.data;
+		});
+	}
+
+	getCurrentUser() {
+		return JSON.parse(localStorage.getItem('user'));;
+	}
 }
 
 export default new AuthService();

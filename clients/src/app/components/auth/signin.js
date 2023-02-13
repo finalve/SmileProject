@@ -15,6 +15,7 @@ class Signin extends React.Component {
 			modal: props.show,
 			message: ''
 		};
+		this.navState = props.state;
 	}
 	onChangeUsername(e) {
 		this.setState({
@@ -31,20 +32,28 @@ class Signin extends React.Component {
 		this.setState({ modal: true })
 	}
 	hideModal() {
+		window.location.replace('/')
 		this.setState({ modal: false })
 	}
 	handleSubmit() {
-		if(this.state.username==='' || this.state.password==='' ) {
+		if (this.state.username === '' || this.state.password === '') {
 			this.setState({
 				loading: false,
 				message: 'Please provide a valid Username or Password.'
 			});
 			return
 		}
-		
-		AuthService.login(this.state).then((res) => {
 
-			window.location.replace('/')
+		AuthService.login(this.state).then((res) => {
+				const user = AuthService.getCurrentUser();
+				if (user) {
+					this.navState({
+						currentUser: user,
+						showModeratorBoard: user.roles.includes("ROLE_MODERATOR"),
+						showAdminBoard: user.roles.includes("ROLE_ADMIN"),
+					});
+				}
+				this.hideModal();
 		},
 			error => {
 				const resMessage =
@@ -63,12 +72,16 @@ class Signin extends React.Component {
 	};
 	render() {
 		return (
-			<Modal show={this.state.modal} onHide={this.hideModal}  size="md" centered>
+			<Modal show={this.state.modal} onHide={this.hideModal} size="md" centered onKeyPress={event => {
+				if (event.key === 'Enter') {
+					this.handleSubmit()
+				}
+			}}>
 				<Modal.Header closeButton>
 					<Modal.Title>Sign in</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
-				<Form onSubmit={this.handleSubmit}>
+					<Form onSubmit={this.handleSubmit}>
 						<Form.Group className="mb-3" controlId="formusername">
 							<Form.Label>Username</Form.Label>
 							<Form.Control type="text" placeholder="Enter Username" value={this.state.username} onChange={this.onChangeUsername} required />
@@ -91,7 +104,8 @@ class Signin extends React.Component {
 					</Form>
 				</Modal.Body>
 				<Modal.Footer>
-					<Button variant="primary" onClick={this.handleSubmit}>Sign In</Button>
+					<Button variant="primary"
+						onClick={this.handleSubmit}>Sign In</Button>
 				</Modal.Footer>
 			</Modal>
 		);

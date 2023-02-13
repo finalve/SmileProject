@@ -115,84 +115,93 @@ class Arbitrage {
 	}
 	async #calcurate({ base, stable, target, filter }) {
 		const { compare, compare_invest, compare_profit, compare_symbol, compare_quantity, compare_price, compare_signal, compare_pattern } = this.#Compare({ base, stable, target, filter });
-		if (compare >= 100.15) {
+		if (compare >= 100.15&& compare < Infinity) {
+			const stablePrice = stable.a;
+			const targetPrice = target.b;
+			const lotsize = filter.lotsize;
 			this.#log(`Found arbitrage ${compare} % symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
 			if (instance) {
 				const tasks = instance.worker.map(async user => {
 					const data = [
 						{
 							symbol: 'USDT',
-							invest: compare_invest,
-							profit: compare_profit,
 							result: compare,
 							pattern: compare_pattern
 						}, {
 							symbol: compare_symbol[1],
-							quantity: compare_quantity[1],
 							price: compare_price[1],
 							signal: compare_signal[1]
 						}, {
 							symbol: compare_symbol[2],
-							quantity: compare_quantity[2],
 							price: compare_price[2],
 							signal: compare_signal[2]
 						}, {
 							symbol: compare_symbol[3],
-							quantity: compare_quantity[3],
 							price: compare_price[3],
 							signal: compare_signal[3]
 						}];
-					await user.arbitrage({ data });
+					await user.arbitrage({ data },(ipr)=>{
+						const quantity = this.#lot(ipr / stablePrice, lotsize);
+						const invest = this.#lot(quantity * stablePrice, 0.0001);
+						const target_quantity = this.#lot(quantity * targetPrice, 0.00001);
+						const true_quantity = this.#lot(quantity * targetPrice, 0.00000001);
+						return {invest,quantity,target_quantity,true_quantity}
+					});
 				});
 				this.#getworker({ target ,compare, compare_invest, compare_profit,compare_pattern });
 				await Promise.all(tasks);
 			}
 		}
-		else if (compare > 100)
+		else if (compare > 100&&compare < Infinity)
 		{
-			//console.log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
+			this.#log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
 			
 		}
 	}
 
 	async #r_calcurate({ base, stable, target, filter }) {
 		const { compare, compare_invest, compare_profit, compare_symbol, compare_quantity, compare_price, compare_signal, compare_pattern } = this.#r_Compare({ base, stable, target, filter });
-		if (compare >= 100.15) {
+		if (compare >= 100.15 &&compare < Infinity) {
+			const stablePrice = base.a;
+			const targetPrice = target.a;
+			const lotsize = filter.lotsize;
 			this.#log(`Found arbitrage ${compare} % symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
 			if (instance) {
 				const tasks = instance.worker.map(async user => {
 					const data = [
 						{
 							symbol: 'USDT',
-							invest: compare_invest,
-							profit: compare_profit,
 							result: compare,
-							pattern: compare_pattern
+							pattern: compare_pattern,
+							filter:filter
 						}, {
 							symbol: compare_symbol[1],
-							quantity: compare_quantity[1],
 							price: compare_price[1],
 							signal: compare_signal[1]
 						}, {
 							symbol: compare_symbol[2],
-							quantity: compare_quantity[2],
 							price: compare_price[2],
 							signal: compare_signal[2]
 						}, {
 							symbol: compare_symbol[3],
-							quantity: compare_quantity[3],
 							price: compare_price[3],
 							signal: compare_signal[3]
 						}];
-					await user.arbitrage({ data });
+					await user.arbitrage({ data },(ipr)=>{
+						const quantity = this.#lot(ipr / stablePrice,0.00001 );
+						const invest = this.#lot(quantity * stablePrice, 0.0001);
+						const target_quantity = this.#lot(quantity / targetPrice, lotsize);
+						const true_quantity = this.#lot(target_quantity * targetPrice, 0.00000001);
+						return {invest,quantity,target_quantity,true_quantity}
+					});
 				});
 				this.#getworker({ target ,compare, compare_invest, compare_profit,compare_pattern });
 				await Promise.all(tasks);
 			}
 		}
-		if (compare > 100)
+		else if (compare > 100&&compare < Infinity)
 		{
-			//console.log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
+			this.#log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
 			
 		}
 	}

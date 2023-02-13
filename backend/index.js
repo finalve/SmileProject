@@ -30,10 +30,11 @@ const io = socketio(server);
 app.use('/api', userRoutes);
 
 const Role = db.role;
-mongoose.connect(`mongodb://${config.root}:${config.pwd}@${config.host}:${config.port}/${config.db}`, { useNewUrlParser: true }).then(() => {
+//mongoose.connect(`mongodb://${config.root}:${config.pwd}@${config.host}:${config.port}/${config.db}`, { useNewUrlParser: true }).then(() => {
+	mongoose.connect(`mongodb+srv://${config.root}:${config.pwd}@cluster0.2hz2bzb.mongodb.net/${config.db}`, { useNewUrlParser: true }).then(() => {
 	console.log("Successfully connect to MongoDB.");
 	initial();
-	userSocket.instance( new Socket(io));
+	userSocket.instance(new Socket(io));
 })
 	.catch(err => {
 		console.error("Connection error", err);

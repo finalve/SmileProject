@@ -13,6 +13,14 @@ class UserService {
     return axios.get(API_URL + 'userdata', { headers: authHeader() });
   }
 
+  userDelete() {
+    return axios.post(API_URL + 'delete', {},{ headers: authHeader() });
+  }
+
+  userAdd({apikey,apiserect,invest}) {
+    return axios.post(API_URL + 'add',{apikey,apiserect,invest},{ headers: authHeader() });
+  }
+
   getModeratorBoard() {
     return axios.get(API_URL + 'mod', { headers: authHeader() });
   }

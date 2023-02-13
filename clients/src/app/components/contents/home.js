@@ -1,30 +1,202 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import AuthService from "../../services/user.service";
-import {config} from '../../config';
-const fetchUser = async () =>{
- const response = await 
- console.log(response)
+import { config } from '../../config';
+import { Button, Form, Modal } from 'react-bootstrap';
+
+const submitAdd = (apiData) => {
+	AuthService.userAdd(apiData).then((res) => {
+		window.location.reload()
+	}, error => {
+		alert(error.response.data.message)
+	})
 }
-const Home = () => {
+const parseJwt = (token) => {
+	try {
+		return JSON.parse(atob(token.split('.')[1]));
+	} catch (e) {
+		return null;
+	}
+};
+const Home = (prop) => {
+	const [logout, setLogout] = useState(prop);
 	const [data, response] = useState();
-	const [user, setUser] = useState(null);
-	AuthService.getUserBoard().then(res=>response(res.data.data))
-	
-	// useEffect(() => {
-	// 	const func = async ()=>{
-			
-	// 	}
-	// 	func().then(() =>console.log(data) )
-	// }, );
+	const [time, setTime] = useState(null);
+	const [apiData, setData] = useState({
+		apikey: '',
+		apiserect: '',
+		invest: 11
+	});
+	const [show, setShow] = useState(false);
+	const handleClose = () => setShow(false);
+	const handleShow = () => setShow(true);
+	const [loaded, Loading] = useState(false);
+
+	const setInput = (e) => {
+		const { name, value } = e.target;
+		setData((prev) => {
+			return {
+				...prev,
+				[name]: value
+			}
+		})
+	}
+	useEffect(() => {
+		AuthService.getUserBoard().then((res) => {
+			response(res.data.data);
+		}, error => {
+			if (error.response.data?.status === 1022) {
+				logout.logOut(logout.state);
+			}
+			console.log(error.response.data)
+
+		})
+		setInterval(() => {
+			AuthService.getUserBoard().then((res) => {
+				response(res.data.data);
+			}, error => {
+				if (error.response.data?.status === 1022) {
+					logout.logOut(logout.state);
+				}
+			})
+		}, 10000);
+	}, [loaded]);
+	useEffect(() => {
+		if (data) {
+			setInterval(() => {
+				setTime(timeConvert(data.alive))
+				const user = JSON.parse(localStorage.getItem("user"));
+				if (user) {
+					const decodedJwt = parseJwt(user.accessToken);
+
+					if (decodedJwt.exp * 1000 < Date.now()) {
+						logout.logOut(logout.state);
+					}
+				}
+			}, 1000);
+		}
+	}, [data]);
 	return (
 		<div>
-			{
-				data&&
-				
-					data.label
-				
+			{data ?
+				(
+					<div className='mt-5'>
+						<div className='d-flex justify-content-start'>
+							<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Label</div>
+							<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.label}</div>
+						</div>
+						<div className='d-flex justify-content-start'>
+							<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Status</div>
+							{data.status ?
+								<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-success text-end'>TRUE</div>
+								: <div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-danger text-end'>{data.error}</div>
+							}
+						</div>
+						<div className='d-flex justify-content-start'>
+							<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Balance</div>
+							<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.invesment}</div>
+						</div>
+						<div className='d-flex justify-content-start'>
+							<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>IPR</div>
+							<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.ipr}</div>
+						</div>
+						<div className='d-flex justify-content-start'>
+							<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Order</div>
+							<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.len}/{data.maxlen}</div>
+						</div>
+						<div className='d-flex justify-content-start'>
+							<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>USDT</div>
+							<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.pnl}</div>
+						</div>
+						<div className='d-flex justify-content-start'>
+							<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>BTC</div>
+							<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.btc}</div>
+						</div>
+						<div className='d-flex justify-content-start'>
+							<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Alive</div>
+							<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{time}</div>
+						</div>
+						<div className='d-flex justify-content-center'>
+							<div className='p-2 flex-fill text-end'><Button variant='primary' onClick={handleShow}>VIEW</Button></div>
+							<div className='p-2 flex-fill text-start'><Button variant='danger' onClick={() => {
+								AuthService.userDelete();
+								response();
+							}}>REMOVE</Button></div>
+						</div>
+						<div className='d-flex justify-content-center'>
+							<div className='flex-fill bg-primary bg-opacity-75 border-bottom text-light'>Messages</div>
+						</div>
+						{data.success.reverse().map((element, index) =>
+						(<div className='d-flex justify-content-center' key={index}>
+							<div className='flex-fill bg-secondary bg-opacity-75 border-bottom text-light'>{element}</div>
+						</div>)
+						)}
+						<Modal
+							show={show}
+							onHide={handleClose}
+							backdrop="static"
+							keyboard={false}
+							size="xl"
+						>
+							<Modal.Header closeButton>
+								<Modal.Title>Arbitrage</Modal.Title>
+							</Modal.Header>
+							<Modal.Body>
+								<div className='d-flex justify-content-center bg-primary bg-opacity-75'>
+									<div className='p-2 w-25 border text-light'>Arbitrage</div>
+									<div className='p-2 w-25 border text-light text-center'>Status</div>
+									<div className='p-2 w-25 border text-light text-center'>Symbol</div>
+									<div className='p-2 w-25 border text-light text-center'>Profit</div>
+								</div>
+								{data.orderOpen.reverse().map((element, index) =>
+								(<div className='d-flex justify-content-center bg-secondary bg-opacity-75' key={index}>
+									<div className='p-2 w-25 border text-light text-start'>{element.data[1].symbol}→{element.data[2].symbol}→{element.data[3].symbol}</div>
+									<div className='p-2 w-25 border text-light text-center'>{element.response.status}</div>
+									<div className='p-2 w-25 border text-light text-center'>{element.response.symbol}</div>
+									<div className='p-2 w-25 border text-light text-center'>{element.data[0].result} %</div>
+								</div>)
+								)}
+							</Modal.Body>
+							<Modal.Footer>
+								<Button variant="secondary" onClick={handleClose}>
+									Close
+								</Button>
+							</Modal.Footer>
+						</Modal>
+					</div>
+				) :
+				(
+					<div className='mt-5'>
+						<Form.Group className="mb-3" controlId="formKey">
+							<Form.Label>API KEY</Form.Label>
+							<Form.Control type="text" placeholder="Enter KEY" name='apikey' value={apiData.apikey} onChange={setInput} />
+						</Form.Group>
+
+						<Form.Group className="mb-3" controlId="formSerect">
+							<Form.Label>API SERECT</Form.Label>
+							<Form.Control type="password" placeholder="Enter Serect" name='apiserect' value={apiData.apiserect} onChange={setInput} />
+							<Form.Text className="text-muted">
+								Add IP Address to Binance API Management ** 192.168.1.92
+							</Form.Text>
+						</Form.Group>
+
+						<Form.Group className="mb-3" controlId="formInvest">
+							<Form.Label>Invest Per Rate</Form.Label>
+							<Form.Control type="number" name='invest' value={apiData.invest} onChange={setInput} />
+							<Form.Text className="text-muted">
+								Defalut = 11 USDT
+							</Form.Text>
+						</Form.Group>
+
+						<Button variant="primary" type="submit" onClick={() => {
+							submitAdd(apiData);
+						}}>
+							Submit
+						</Button>
+					</div>
+				)
 			}
+
 		</div>
 	)
 }
@@ -49,75 +221,6 @@ const timeConvert = (time) => {
 	return `Day ${days} / ${hours}:${minutes}:${seconds} Hour`
 }
 
-const View = ({ users }) => {
-	const [username, setUser] = useState(null);
-
-	return (<div>
-		
-		<div className="modal fade" id="view" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-			<div className="modal-dialog modal-dialog-centered">
-				<div className="modal-content">
-					<div className="modal-header bg-secondary text-light">
-						<h1 className="modal-title fs-5" id="exampleModalLabel">Property</h1>
-						<button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-					</div>
-					<div className="modal-body">
-						<div className='row align-middle' >
-							<div className='col-4'>
-								<h5>Username</h5>
-							</div>
-							<div className='col-8'>
-								<span>{users?.username}</span>
-							</div>
-
-							<div className='col-4'>
-								<h5>Invesment</h5>
-							</div>
-							<div className='col-8'>
-								<span>{users?.invesment} USDT</span>
-							</div>
-
-							<div className='col-4'>
-								<h5>Process</h5>
-							</div>
-							<div className='col-8'>
-								<span>{users?.len}/{users?.maxlen}</span>
-							</div>
-
-							<div className='col-4'>
-								<h5>IPR</h5>
-							</div>
-							<div className='col-8'>
-								<span>{users?.ipr} USDT</span>
-							</div>
-
-							<div className='col-4'>
-								<h5>Alive</h5>
-							</div>
-							<div className='col-8'>
-								<span>{timeConvert(users?.alive)}</span>
-							</div>
-
-							<div className='col-4'>
-								<h4>PNL</h4>
-							</div>
-							<div className='col-8'>
-								<span>{users?.pnl}</span>
-							</div>
-
-
-						</div>
-					</div>
-					<div className="modal-footer">
-						<button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-						<button type="button" className="btn btn-danger" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#remove" onClick={() => setUser(users.username)} >Remove</button>
-					</div>
-				</div>
-			</div>
-		</div>
-		{<Remove username={username} close={setUser} />}
-	</div>)
-}
 const Remove = ({ username, close }) => {
 	const [data, setData] = useState(
 		{

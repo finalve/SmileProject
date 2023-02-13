@@ -142,15 +142,20 @@ class Arbitrage {
 							price: compare_price[3],
 							signal: compare_signal[3]
 						}];
-					await user.arbitrage({ data });
+					await user.arbitrage({ data },(ipr)=>{
+						const quantity = this.#lot(ipr / stable.a, filter.lotsize);
+						const target_quantity = this.#lot(quantity * targetPrice, 0.00001);
+						return {quantity,target_quantity}
+					});
 				});
+				this.#getworker({ target ,compare, compare_invest, compare_profit,compare_pattern });
 				await Promise.all(tasks);
 			}
 		}
 		else if (compare > 100)
 		{
-			console.log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
-			this.#getworker({ target ,compare, compare_invest, compare_profit,compare_pattern });
+			//console.log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
+			
 		}
 	}
 
@@ -166,7 +171,8 @@ class Arbitrage {
 							invest: compare_invest,
 							profit: compare_profit,
 							result: compare,
-							pattern: compare_pattern
+							pattern: compare_pattern,
+							filter:filter
 						}, {
 							symbol: compare_symbol[1],
 							quantity: compare_quantity[1],
@@ -185,13 +191,14 @@ class Arbitrage {
 						}];
 					await user.arbitrage({ data });
 				});
+				this.#getworker({ target ,compare, compare_invest, compare_profit,compare_pattern });
 				await Promise.all(tasks);
 			}
 		}
-		else if (compare > 100)
+		if (compare > 100)
 		{
-			console.log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
-			this.#getworker({ target ,compare, compare_invest, compare_profit,compare_pattern });
+			//console.log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
+			
 		}
 	}
 
