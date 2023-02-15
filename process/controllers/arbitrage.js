@@ -142,9 +142,9 @@ class Arbitrage {
 						}];
 					await user.arbitrage({ data },(ipr)=>{
 						const quantity = this.#lot(ipr / stablePrice, lotsize);
-						const invest = this.#lot(quantity * stablePrice, 0.0001);
-						const target_quantity = this.#lot(quantity * targetPrice, 0.00001);
-						const true_quantity = this.#lot(quantity * targetPrice, 0.00000001);
+						const invest = this.#lot(quantity * stablePrice, '0.0001');
+						const target_quantity = this.#lot(quantity * targetPrice,'0.00001');
+						const true_quantity = this.#lot(quantity * targetPrice, '0.00000001');
 						return {invest,quantity,target_quantity,true_quantity}
 					});
 				});
@@ -188,10 +188,10 @@ class Arbitrage {
 							signal: compare_signal[3]
 						}];
 					await user.arbitrage({ data },(ipr)=>{
-						const quantity = this.#lot(ipr / stablePrice,0.00001 );
-						const invest = this.#lot(quantity * stablePrice, 0.0001);
+						const quantity = this.#lot(ipr / stablePrice,'0.00001' );
+						const invest = this.#lot(quantity * stablePrice, '0.0001');
 						const target_quantity = this.#lot(quantity / targetPrice, lotsize);
-						const true_quantity = this.#lot(target_quantity * targetPrice, 0.00000001);
+						const true_quantity = this.#lot(target_quantity * targetPrice, '0.00000001');
 						return {invest,quantity,target_quantity,true_quantity}
 					});
 				});
@@ -231,7 +231,6 @@ class Arbitrage {
 		var n = d.toLocaleTimeString();
 		let message = `${n} user:[SYSTEM]  message:[${msg}]`;
 		console.log(message)
-		//this.#socket.boardcast(message);
 	}
 	#lot(price, size) {
 		const decimalSize = size.toString().split('.')[1]?.length || 0;

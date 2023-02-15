@@ -9,11 +9,11 @@ revokeToken = (token) => {
 }
 const parseJwt = (token) => {
 	try {
-	  return JSON.parse(atob(token.split('.')[1]));
+		return JSON.parse(atob(token.split('.')[1]));
 	} catch (e) {
-	  return null;
+		return null;
 	}
-  };
+};
 clearOldToken = () => {
 	revokedTokens.forEach((token) => {
 		const decodedJwt = parseJwt(token);
@@ -30,7 +30,9 @@ verifyToken = (req, res, next) => {
 		if (err) {
 			return res.status(401).send({ message: "Unauthorized!" });
 		}
+		if (decoded.ip !== req.headers["x-real-ip"]) return res.status(400).json({status: 1021, message: "Can't Cross IP Address!" });
 		req.body.label = decoded.label;
+		req.userId = decoded.userId;
 		next();
 	});
 };

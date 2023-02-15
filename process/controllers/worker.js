@@ -29,27 +29,27 @@ class Worker {
 	async arbitrage({ data }, callback) {
 		if (this.#started)
 			if (this.Invesment > this.ipr)
-			if(this.BNB > 0)
-				if (this.openOrder.length < this.orderLength) {
-					try {
-						const userIPR = callback(this.ipr);
-						data.userIPR = userIPR;
-						const response = await this.#newOrder(data[1].symbol, 'BUY', userIPR.quantity, data[1].price)
-						if (!response.data)
-							return
-						this.openOrder.push({
-							data: data, response:
-							{
-								symbol: response.data.symbol,
-								orderId: response.data.orderId
-							}
-						});
-					} catch (error) {
-						console.log(error)
-						this.#started = false;
-					}
+				if (this.BNB > 0)
+					if (this.openOrder.length < this.orderLength) {
+						try {
+							const userIPR = callback(this.ipr);
+							data.userIPR = userIPR;
+							const response = await this.#newOrder(data[1].symbol, 'BUY', userIPR.quantity, data[1].price)
+							if (!response.data)
+								return
+							this.openOrder.push({
+								data: data, response:
+								{
+									symbol: response.data.symbol,
+									orderId: response.data.orderId
+								}
+							});
+						} catch (error) {
+							console.log(error)
+							this.#started = false;
+						}
 
-				}
+					}
 	}
 	#callback = {
 		open: () => {
@@ -89,7 +89,7 @@ class Worker {
 					this.Invesment = parseFloat(stable.f)
 					this.#log(`balance of ${this.Invesment} USDT`)
 					if (!BNB.f)
-					return
+						return
 					this.BNB = parseFloat(BNB.f)
 					this.#log(`balance of ${this.BNB} bnb`)
 
@@ -122,11 +122,15 @@ class Worker {
 							if (order.data[0].pattern === "A") {
 								if (order.response.symbol === 'BTCUSDT') {
 									this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
-									let lot_btc = order.data.userIPR.true_quantity > 0 ? order.data.userIPR.true_quantity - json.quantity :0;
+									let lot_btc = order.data.userIPR.true_quantity > 0 ? order.data.userIPR.true_quantity - json.quantity : 0;
 									let lot_usdt = lot_btc * order.data[3].price;
 									let profit = (json.quote + lot_usdt) - order.data.userIPR.invest;
 									this.pnl += profit;
 									this.btc += lot_btc;
+									console.log(lot_btc)
+									console.log(lot_usdt)
+									console.log(order.data[1].price)
+									console.log(order.data.userIPR)
 									this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
 									this.#pushSuccess(`Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
 									this.takeOrder += 1;
@@ -134,8 +138,7 @@ class Worker {
 								else if (order.response.symbol.includes('USDT')) {
 									try {
 										const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data.userIPR.quantity, order.data[2].price)
-										if (!response.data)
-										{
+										if (!response.data) {
 											this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
 											return
 										}
@@ -153,8 +156,7 @@ class Worker {
 								} else if (order.response.symbol.includes('BTC')) {
 									try {
 										const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[3].price)
-										if (!response.data)
-										{
+										if (!response.data) {
 											this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
 											return
 										}
@@ -175,7 +177,7 @@ class Worker {
 									this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
 									let lot_btc = order.data.userIPR.true_quantity > 0 ? order.data.userIPR.quantity - order.data.userIPR.true_quantity : 0;
 									let lot_usdt = lot_btc * order.data[1].price;
-									let profit = (json.quote+lot_usdt) - order.data.userIPR.invest;
+									let profit = (json.quote + lot_usdt) - order.data.userIPR.invest;
 									console.log(lot_btc)
 									console.log(lot_usdt)
 									console.log(order.data[1].price)
@@ -190,12 +192,11 @@ class Worker {
 								else if (order.response.symbol === 'BTCUSDT') {
 									try {
 										const response = await this.#newOrder(order.data[2].symbol, 'BUY', order.data.userIPR.target_quantity, order.data[2].price)
-										if (!response.data)
-										{
+										if (!response.data) {
 											this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
 											return
 										}
-											
+
 										order.response = {
 											symbol: response.data.symbol,
 											orderId: response.data.orderId,
@@ -211,8 +212,7 @@ class Worker {
 								else if (order.response.symbol.includes('BTC')) {
 									try {
 										const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[3].price)
-										if (!response.data)
-										{
+										if (!response.data) {
 											this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
 											return
 										}
@@ -254,15 +254,9 @@ class Worker {
 	}
 	#refresh() {
 		this.#disconnect();
-		if (this.#started) {
-			this.#client = new Spot(this.apikey, this.#serect);
-			this.#createListenKey();
-			this.#log(`Restart Socket`);
-		}
-		else {
-			this.#started = false;
-			this.#error(`Status False!`);
-		}
+		this.#client = new Spot(this.apikey, this.#serect);
+		this.#createListenKey();
+		this.#log(`Restart Socket`);
 	}
 	#log(msg) {
 		var d = new Date();

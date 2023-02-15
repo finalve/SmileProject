@@ -37,6 +37,18 @@ class Socket {
 			socket.on('edit', (res) => {
 				this.clientResponse.set(res.id, res);
 			});
+
+			socket.on('alluser', (res) => {
+				this.clientResponse.set(res.id, res);
+			});
+
+			socket.on('adminedit', (res) => {
+				this.clientResponse.set(res.id, res);
+			});
+
+			socket.on('admindelete', (res) => {
+				this.clientResponse.set(res.id, res);
+			});
 		});
 	}
 	response(req, res) {

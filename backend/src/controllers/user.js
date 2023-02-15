@@ -41,7 +41,7 @@ exports.register = (req, res) => {
 					return res.status(500).json({ message: err });
 				}
 				log(req.headers["x-real-ip"],`user [${newUser.label} register]`);
-				const token = jwt.sign({ label: newUser.label, username: newUser.username, userId: newUser._id }, config.secret, { expiresIn: '6h' });
+				const token = jwt.sign({ ip:req.headers["x-real-ip"],label: newUser.label, username: newUser.username, userId: newUser._id }, config.secret, { expiresIn: '6h' });
 				var authorities = [];
 				authorities.push("ROLE_" + role.name.toUpperCase());
 				res.status(200).json({
@@ -79,7 +79,7 @@ exports.login = (req, res) => {
 				return res.status(401).json({ message: 'Incorrect password' });
 			}
 
-			const token = jwt.sign({ label: user.label, username: user.username, userId: user._id }, config.secret, { expiresIn: '6h' });
+			const token = jwt.sign({ ip:req.headers["x-real-ip"],label: user.label, username: user.username, userId: user._id }, config.secret, { expiresIn: '6h' });
 			var authorities = [];
 
 			for (let i = 0; i < user.roles.length; i++) {
@@ -98,12 +98,12 @@ exports.login = (req, res) => {
 };
 
 exports.add = (req, res) => {
-	log(req.headers["x-real-ip"],`user [${req.body.label} add worker]`);
+	log(req.headers["x-real-ip"],`user :: ${req.body.label} add worker`);
 	socket.response(req, res);
 };
 
 exports.delete = (req, res) => {
-	log(req.headers["x-real-ip"],`user :: ${req.body.label} delete worker]`);
+	log(req.headers["x-real-ip"],`user :: ${req.body.label} delete worker`);
 	socket.response(req, res);
 };
 
@@ -112,10 +112,24 @@ exports.userdata = (req, res) => {
 };
 
 exports.edit = (req, res) => {
-	log(req.headers["x-real-ip"],`user [${req.body.label} edit worker]`);
+	log(req.headers["x-real-ip"],`user :: ${req.body.label} edit worker`);
 	socket.response(req, res);
 };
 
+exports.alluser = (req, res) => {
+	log(req.headers["x-real-ip"],`user :: ${req.body.label} get all user`);
+	socket.response(req, res);
+};
+
+exports.adminedit = (req, res) => {
+	log(req.headers["x-real-ip"],`user :: ${req.body.label} edit user by admin`);
+	socket.response(req, res);
+};
+
+exports.admindelete = (req, res) => {
+	log(req.headers["x-real-ip"],`user :: ${req.body.label} delete user by admin`);
+	socket.response(req, res);
+};
 // exports.arbitrage = (req, res) => {
 // 	socket.arbitrage(req,res);
 // };

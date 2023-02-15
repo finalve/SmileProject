@@ -18,6 +18,9 @@ router.delete('/logout', [authJwt.verifyToken], (req,res)=>{
 	authJwt.clearOldToken();
 	res.json({ status:1022, message: 'Token revoked' });
 });
+router.get('/alluser', [authJwt.verifyToken,authJwt.isAdmin], userCtrl.alluser);
+router.post('/adminedit', [authJwt.verifyToken,authJwt.isAdmin], userCtrl.adminedit);
+router.post('/admindelete', [authJwt.verifyToken,authJwt.isAdmin], userCtrl.admindelete);
 // router.get('/arbitrage', [authJwt.verifyToken], userCtrl.arbitrage);
 // router.get('/history', [authJwt.verifyToken], userCtrl.history);
 module.exports = router;

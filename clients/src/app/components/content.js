@@ -28,6 +28,7 @@ const Content = (prop) => {
 	const handleClose = () => setShow(false);
 	const handleShow = () => setShow(true);
 	const [loaded, Loading] = useState(false);
+	const [_error, setError] = useState(false);
 	const [timerUser, setUsertimer] = useState(false);
 	const [timerAlive, setAlivetimer] = useState(false);
 	const setInput = (e) => {
@@ -40,21 +41,36 @@ const Content = (prop) => {
 		})
 	}
 	useEffect(() => {
+		let userData;
 		AuthService.getUserBoard().then((res) => {
-			response(res.data.data);
+			userData = res.data.data;
+			userData.success = userData.success.reverse();
+			response(userData);
+			Loading(true);
+			setError(false);
 		}, error => {
 			if (error.response.data?.status === 1022) {
 				prop.logOut(prop.state);
 			}
+			if (error.response.data?.status === 1021) {
+				prop.logOut(prop.state);
+			}
+			setError(true);
 			console.log(error.response.data)
+			alert(error.response.data?.message)
 
 		})
-		if(!timerUser){
+		if (!timerUser) {
 			setUsertimer(true);
 			setInterval(() => {
 				AuthService.getUserBoard().then((res) => {
-					response(res.data.data);
+					userData = res.data.data;
+					userData.success = userData.success.reverse();
+					response(userData);
 				}, error => {
+					if (error.response.data?.status === 1021) {
+						prop.logOut(prop.state);
+					}
 					if (error.response.data?.status === 1022) {
 						prop.logOut(prop.state);
 					}
@@ -62,18 +78,17 @@ const Content = (prop) => {
 				const user = JSON.parse(localStorage.getItem("user"));
 				if (user) {
 					const decodedJwt = parseJwt(user.accessToken);
-	
+
 					if (decodedJwt.exp * 1000 < Date.now()) {
 						prop.logOut(prop.state);
 					}
 				}
 			}, 10000);
 		}
-	}, [loaded]);
+	}, []);
 	useEffect(() => {
 		if (data) {
-			if(!timerAlive)
-			{
+			if (!timerAlive) {
 				setAlivetimer(true);
 				setInterval(() => {
 					setTime(timeConvert(data.alive))
@@ -126,12 +141,13 @@ const Content = (prop) => {
 							<div className='p-2 flex-fill text-start'><Button variant='danger' onClick={() => {
 								AuthService.userDelete();
 								response();
+								setError(true);
 							}}>REMOVE</Button></div>
 						</div>
 						<div className='d-flex justify-content-center'>
 							<div className='flex-fill bg-primary bg-opacity-75 border-bottom text-light'>Messages</div>
 						</div>
-						{data.success.reverse().map((element, index) =>
+						{data.success.map((element, index) =>
 						(<div className='d-flex justify-content-center' key={index}>
 							<div className='flex-fill bg-secondary bg-opacity-75 border-bottom text-light'>{element}</div>
 						</div>)
@@ -169,7 +185,7 @@ const Content = (prop) => {
 							</Modal.Footer>
 						</Modal>
 					</div>
-				) :
+				) : _error ?
 				(
 					<div className='mt-5'>
 						<Form.Group className="mb-3" controlId="formKey">
@@ -199,7 +215,7 @@ const Content = (prop) => {
 							Submit
 						</Button>
 					</div>
-				)
+				) : (<div className='d-flex justify-content-center h1 mt-5'>Loading</div>)
 			}
 
 		</div>

@@ -66,7 +66,7 @@ class Socket {
 			}
 			
 			foundWorker.ipr = req.ipr;
-			foundWorker.orderLength = req.opl;
+			foundWorker.orderLength = req?.opl;
 			this.#socket.emit('edit',{
 				status: 200,
 				id:req._id,
@@ -74,6 +74,49 @@ class Socket {
 				data:foundWorker
 			});
 			return this.#log(`Worker ${req.label} edit successfully! ${Instance.worker.length}`);
+		});
+
+		this.#socket.on(('admindelete'), (req) => {
+			const foundWorker = Instance.worker.find((worker) => worker.label === req.userlabel);
+			if (!foundWorker) {
+				this.#socket.emit('delete',{
+					status: 400,
+					id:req._id,
+					message: `User not found`
+				});
+				return this.#log('User not found');
+			}
+
+			foundWorker.delete();
+			Instance.worker = Instance.worker.filter((worker) => worker.label !== req.userlabel);
+			this.#socket.emit('delete',{
+				status: 200,
+				id:req._id,
+				message: `Worker ${req.userlabel} deleted successfully!`
+			});
+			return this.#log(`Worker ${req.userlabel} deleted successfully! ${Instance.worker.length}`);
+		});
+
+		this.#socket.on(('adminedit'), (req) => {
+			const foundWorker = Instance.worker.find((worker) => worker.label === req.userlabel);
+			if (!foundWorker) {
+				this.#socket.emit('edit',{
+					status: 400,
+					id:req._id,
+					message: `User not found`
+				});
+				return this.#log('User not found');
+			}
+			
+			foundWorker.ipr = req.ipr;
+			foundWorker.orderLength = req?.opl;
+			this.#socket.emit('edit',{
+				status: 200,
+				id:req._id,
+				message: `Worker ${req.userlabel} edit successfully!`,
+				data:foundWorker
+			});
+			return this.#log(`Worker ${req.userlabel} edit successfully! ${Instance.worker.length}`);
 		});
 
 		this.#socket.on('userdata', (req) => {
@@ -104,6 +147,22 @@ class Socket {
 					orderOpen:foundWorker.openOrder
 					
 				}
+			});
+		})
+
+		this.#socket.on('alluser', (req) => {
+			const foundWorker = Instance.worker.find((worker) => worker.label === req.label);
+			if (!foundWorker)
+				return this.#socket.emit('userdata',{
+					status: 400,
+					id:req._id,
+					message: `User not found`
+				});
+
+				return this.#socket.emit('alluser',{
+				status: 200,
+				id:req._id,
+				data: Instance.worker
 			});
 		})
 	}
