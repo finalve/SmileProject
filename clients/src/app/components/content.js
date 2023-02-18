@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AuthService from "../services/user.service";
 import { Button, Form, Modal } from 'react-bootstrap';
-
+import loading from '../../img/loading.gif';
 const submitAdd = (apiData) => {
 	AuthService.userAdd(apiData).then((res) => {
 		window.location.reload()
@@ -27,10 +27,10 @@ const Content = (prop) => {
 	const [show, setShow] = useState(false);
 	const handleClose = () => setShow(false);
 	const handleShow = () => setShow(true);
-	const [loaded, Loading] = useState(false);
 	const [_error, setError] = useState(false);
 	const [timerUser, setUsertimer] = useState(false);
 	const [timerAlive, setAlivetimer] = useState(false);
+	const [ipaddress, setIPaddress] = useState([]);
 	const setInput = (e) => {
 		const { name, value } = e.target;
 		setData((prev) => {
@@ -42,11 +42,18 @@ const Content = (prop) => {
 	}
 	useEffect(() => {
 		let userData;
+		AuthService.getIPAddress().then((res) => {
+			const ip = res.data.ip;
+			const setAddress = new Set(ip);
+			setIPaddress(Array.from(setAddress));
+		}, error => {
+			console.log(error.response.data)
+
+		})
 		AuthService.getUserBoard().then((res) => {
 			userData = res.data.data;
 			userData.success = userData.success.reverse();
 			response(userData);
-			Loading(true);
 			setError(false);
 		}, error => {
 			if (error.response.data?.status === 1022) {
@@ -57,9 +64,11 @@ const Content = (prop) => {
 			}
 			setError(true);
 			console.log(error.response.data)
-			alert(error.response.data?.message)
+			if (error.response.data?.status !== 400)
+				alert(error.response.data?.message)
 
 		})
+
 		if (!timerUser) {
 			setUsertimer(true);
 			setInterval(() => {
@@ -186,36 +195,47 @@ const Content = (prop) => {
 						</Modal>
 					</div>
 				) : _error ?
-				(
-					<div className='mt-5'>
-						<Form.Group className="mb-3" controlId="formKey">
-							<Form.Label>API KEY</Form.Label>
-							<Form.Control type="text" placeholder="Enter KEY" name='apikey' value={apiData.apikey} onChange={setInput} />
-						</Form.Group>
+					(
 
-						<Form.Group className="mb-3" controlId="formSerect">
-							<Form.Label>API SERECT</Form.Label>
-							<Form.Control type="password" placeholder="Enter Serect" name='apiserect' value={apiData.apiserect} onChange={setInput} />
-							<Form.Text className="text-muted">
-								Add IP Address to Binance API Management ** 171.6.140.125
-							</Form.Text>
-						</Form.Group>
+						<div className='mt-5' onKeyDown={event => {
+							if (event.key === 'Enter') {
+								submitAdd(apiData)
+							}
+						}} >
+							<Form.Group className="mb-3" controlId="formKey">
+								<Form.Label>API KEY</Form.Label>
+								<Form.Control type="text" placeholder="Enter KEY" name='apikey' value={apiData.apikey} onChange={setInput} />
+							</Form.Group>
 
-						<Form.Group className="mb-3" controlId="formInvest">
-							<Form.Label>Invest Per Rate</Form.Label>
-							<Form.Control type="number" name='invest' value={apiData.invest} onChange={setInput} />
-							<Form.Text className="text-muted">
-								Defalut = 11 USDT
-							</Form.Text>
-						</Form.Group>
+							<Form.Group className="mb-3" controlId="formSerect">
+								<Form.Label>API SERECT</Form.Label>
+								<Form.Control type="password" placeholder="Enter Serect" name='apiserect' value={apiData.apiserect} onChange={setInput} />
+								<Form.Text className="text-muted">
+									Add IP Address to Binance API Management ** {
+										ipaddress.map((value, index) => (
+											<div key={index}>
+												{value}
+											</div>
+										))
+									}
+								</Form.Text>
+							</Form.Group>
 
-						<Button variant="primary" type="submit" onClick={() => {
-							submitAdd(apiData);
-						}}>
-							Submit
-						</Button>
-					</div>
-				) : (<div className='d-flex justify-content-center h1 mt-5'>Loading</div>)
+							<Form.Group className="mb-3" controlId="formInvest">
+								<Form.Label>Invest Per Rate</Form.Label>
+								<Form.Control type="number" name='invest' value={apiData.invest} onChange={setInput} />
+								<Form.Text className="text-muted">
+									Defalut = 11 USDT
+								</Form.Text>
+							</Form.Group>
+
+							<Button variant="primary" type="submit" onClick={() => {
+								submitAdd(apiData);
+							}}>
+								Submit
+							</Button>
+						</div>
+					) : (<div className='d-flex justify-content-center'><img style={{ width: "50%", height: "50%" }} src={loading} alt="loading" /></div>)
 			}
 
 		</div>

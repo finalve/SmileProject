@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Button, Form } from 'react-bootstrap';
 import AuthService from "./app/services/auth.service";
-import { Signin, Content, Signup } from './app/components';
+import { Signin, Content, Signup, Dashboard } from './app/components';
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle';
 import './App.css';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 const userDefault = {
 	showModeratorBoard: false,
 	showAdminBoard: false,
@@ -31,12 +32,21 @@ const App = () => {
 		}
 	}, [])
 
-	const { currentUser } = state;
+	const { currentUser, showAdminBoard } = state;
 	const navBar = currentUser ?
 		(
-			<Nav className="ms-auto">
-				<Button variant="primary" onClick={() => logOut(setState)} >Sign Out</Button>
-			</Nav>
+			<>
+				{
+					showAdminBoard && (
+						<Nav >
+							<Button variant="primary" onClick={() => <Dashboard />} >Users</Button>
+						</Nav>
+					)
+				}
+				<Nav className="ms-auto">
+					<Button variant="primary" onClick={() => logOut(setState)} >Sign Out</Button>
+				</Nav>
+			</>
 		)
 		:
 		(
@@ -62,7 +72,14 @@ const App = () => {
 				)}
 			{currentUser ?
 				(
-					<Content logOut={logOut} state={setState} />
+					<BrowserRouter>
+						<Routes>
+							<Route path="/" element={<Content logOut={logOut} state={setState} />}>
+								<Route index element={<Content logOut={logOut} state={setState} />} />
+								<Route path="/dashboard" element={<Dashboard />} />
+							</Route>
+						</Routes>
+					</BrowserRouter>
 				)
 				:
 				(

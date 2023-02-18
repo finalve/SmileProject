@@ -41,7 +41,10 @@ class Worker {
 								data: data, response:
 								{
 									symbol: response.data.symbol,
-									orderId: response.data.orderId
+									orderId: response.data.orderId,
+									status: response.data.status,
+									origQty: response.data.origQty,
+									step:1
 								}
 							});
 						} catch (error) {
@@ -122,14 +125,16 @@ class Worker {
 							if (order.data[0].pattern === "A") {
 								if (order.response.symbol === 'BTCUSDT') {
 									this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
-									let lot_btc = order.data.userIPR.true_quantity > 0 ? order.data.userIPR.true_quantity - json.quantity : 0;
-									let lot_usdt = lot_btc * order.data[3].price;
-									let profit = (json.quote + lot_usdt) - order.data.userIPR.invest;
+									let lot_btc = order.data.userIPR.true_quantity > 0 ? this.#lot(order.data.userIPR.true_quantity - json.quantity, '0.00000001') : 0;
+									let lot_usdt = lot_btc > 0 ? this.#lot(lot_btc * order.data[3].price, '0.000001') : 0;
+									let profit_origin = parseFloat(json.quote) + parseFloat(lot_usdt)
+									let profit = profit_origin - order.data.userIPR.invest
 									this.pnl += profit;
-									this.btc += lot_btc;
-									console.log(lot_btc)
+									this.btc += parseFloat(lot_btc);
+									console.log(profit_origin)
 									console.log(lot_usdt)
-									console.log(order.data[1].price)
+									console.log(lot_btc)
+									console.log(json.quantity)
 									console.log(order.data.userIPR)
 									this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
 									this.#pushSuccess(`Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
@@ -146,7 +151,8 @@ class Worker {
 											symbol: response.data.symbol,
 											orderId: response.data.orderId,
 											status: response.data.status,
-											origQty: response.data.origQty
+											origQty: response.data.origQty,
+											step:2
 										}
 									}
 									catch (error) {
@@ -164,7 +170,8 @@ class Worker {
 											symbol: response.data.symbol,
 											orderId: response.data.orderId,
 											status: response.data.status,
-											origQty: response.data.origQty
+											origQty: response.data.origQty,
+											step:3
 										}
 									}
 									catch (error) {
@@ -175,15 +182,12 @@ class Worker {
 							} else if (order.data[0].pattern === "B") {
 								if (order.response.symbol.includes('USDT') && order.response.symbol !== 'BTCUSDT') {
 									this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
-									let lot_btc = order.data.userIPR.true_quantity > 0 ? order.data.userIPR.quantity - order.data.userIPR.true_quantity : 0;
-									let lot_usdt = lot_btc * order.data[1].price;
-									let profit = (json.quote + lot_usdt) - order.data.userIPR.invest;
-									console.log(lot_btc)
-									console.log(lot_usdt)
-									console.log(order.data[1].price)
-									console.log(order.data.userIPR)
-									this.btc += lot_btc;
-									this.pnl += profit
+									let lot_btc = order.data.userIPR.true_quantity > 0 ? this.#lot(order.data.userIPR.quantity - order.data.userIPR.true_quantity, '0.00000001') : 0;
+									let lot_usdt = lot_btc > 0 ? this.#lot(lot_btc * order.data[1].price, '0.00000001') : 0;
+									let profit_origin = parseFloat(json.quote) + parseFloat(lot_usdt)
+									let profit = profit_origin - order.data.userIPR.invest
+									this.btc += parseFloat(lot_btc);
+									this.pnl += profit;
 
 									this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
 									this.#pushSuccess(`Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
@@ -201,7 +205,8 @@ class Worker {
 											symbol: response.data.symbol,
 											orderId: response.data.orderId,
 											status: response.data.status,
-											origQty: response.data.origQty
+											origQty: response.data.origQty,
+											step:2
 										}
 									}
 									catch (error) {
@@ -220,7 +225,8 @@ class Worker {
 											symbol: response.data.symbol,
 											orderId: response.data.orderId,
 											status: response.data.status,
-											origQty: response.data.origQty
+											origQty: response.data.origQty,
+											step:3
 										}
 									}
 									catch (error) {
@@ -238,6 +244,11 @@ class Worker {
 			this.history = this.history.filter(x => x !== json);
 		})
 		this.#loopCheck();
+	}
+
+	#lot(price, size) {
+		const decimalSize = size.toString().split('.')[1]?.length || 0;
+		return Number(Math.floor(price / size) * size).toFixed(decimalSize);
 	}
 	#pushSuccess(msg) {
 		let d = new Date();
@@ -257,6 +268,73 @@ class Worker {
 		this.#client = new Spot(this.apikey, this.#serect);
 		this.#createListenKey();
 		this.#log(`Restart Socket`);
+		this.#openOrder().then(oOrder => {
+			this.openOrder.map(async (order) => {
+				const _ok = oOrder.data.some(x => x.orderId === order.response.orderId);
+				if (!_ok)
+				{
+					const index = order.response.step;
+					if(index<3)
+					{
+						if(order.data[0].pattern === 'A')
+						{
+							if(index === 1)
+							{
+								const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[2].price)
+								order.response = {
+									symbol: response.data.symbol,
+									orderId: response.data.orderId,
+									status: response.data.status,
+									origQty: response.data.origQty,
+									step:2
+								}
+							}
+							else if(index === 2)
+							{
+								const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[3].price)
+								order.response = {
+									symbol: response.data.symbol,
+									orderId: response.data.orderId,
+									status: response.data.status,
+									origQty: response.data.origQty,
+									step:3
+								}
+							}
+						}
+						else if(order.data[0].pattern === 'B')
+						{
+							if(index === 1)
+							{
+								const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[2].price)
+								order.response = {
+									symbol: response.data.symbol,
+									orderId: response.data.orderId,
+									status: response.data.status,
+									origQty: response.data.origQty,
+									step:2
+								}
+							}
+							else if(index === 2)
+							{
+								const response = await this.#newOrder(order.data[3].symbol, 'BUY', order.data.userIPR.target_quantity, order.data[3].price)
+								order.response = {
+									symbol: response.data.symbol,
+									orderId: response.data.orderId,
+									status: response.data.status,
+									origQty: response.data.origQty,
+									step:3
+								}
+							}
+						}
+						
+					}else{
+						this.openOrder = this.openOrder.filter(x => x.response.orderId !== res.response.orderId);
+					}
+					
+					
+				}
+			})
+		})
 	}
 	#log(msg) {
 		var d = new Date();
@@ -314,10 +392,23 @@ class Worker {
 			this.#started = false;
 			console.log(error.response.data)
 			this.errorMessage = error.response.data?.msg
+			return error;
 		}
 	}
 
-	async #cancelOrder(symbol, orderId) {
+	async #openOrder() {
+		try {
+			const response = await this.#client.openOrders()
+			return response;
+		} catch (error) {
+			this.#started = false;
+			console.log(error.response.data)
+			this.errorMessage = error.response.data?.msg
+			return error;
+		}
+	}
+
+	async #cancelOrder(symbol, _orderId) {
 		try {
 			const response = await this.#client.cancelOrder(symbol, { orderId: _orderId });
 			return response;
@@ -330,6 +421,10 @@ class Worker {
 	}
 	status() {
 		return this.#started;
+	}
+	removeOrder(orderId) {
+		this.openOrder = this.openOrder.filter(x => x.response.orderId != orderId);
+		return orderId;
 	}
 	delete() {
 		this.#started = false;

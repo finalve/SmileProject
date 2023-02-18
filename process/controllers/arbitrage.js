@@ -73,19 +73,19 @@ class Arbitrage {
 	#calculateProfit(quantity, stablePrice, targetPrice, basePrice, lotsize) {
 		quantity = this.#lot(quantity, lotsize);
 		const invest = this.#lot(quantity * stablePrice, 0.0001);
-		const target_quantity = this.#lot(quantity * targetPrice, 0.00001);
+		const target_quantity = this.#lot(quantity * targetPrice, '0.00000001');
 		const profit = this.#lot(target_quantity * basePrice, 0.0001);
 		const result = this.#lot(profit / invest * 100, 0.0001)
 		return { quantity, target_quantity, invest, profit, result }
 	}
 
 	#calculateReverseProfit(quantity, stablePrice, targetPrice, basePrice, lotsize) {
-		const r_quantity = this.#lot(quantity, 0.00001);
-		const r_invest = this.#lot(r_quantity * stablePrice, 0.0001);
-		const r_target_quantity = this.#lot(r_quantity / targetPrice, lotsize);
-		const r_profit = this.#lot(r_target_quantity * basePrice, 0.0001);
-		const r_result = this.#lot(r_profit / r_invest * 100, 0.0001)
-		return { r_quantity, r_target_quantity, r_invest, r_profit, r_result }
+		quantity = this.#lot(quantity, 0.00001);
+		const invest = this.#lot(quantity * stablePrice, 0.0001);
+		const target_quantity = this.#lot(quantity / targetPrice, lotsize);
+		const profit = this.#lot(target_quantity * basePrice, 0.0001);
+		const result = this.#lot(profit / invest * 100, 0.0001)
+		return { quantity, target_quantity, invest, profit, result }
 	}
 	#Compare({ base, stable, target, filter }) {
 
@@ -102,12 +102,12 @@ class Arbitrage {
 	}
 
 	#r_Compare({ base, stable, target, filter }) {
-		const { r_quantity, r_target_quantity, r_invest, r_profit, r_result } = this.#calculateReverseProfit(11.0 / base.a, base.a, target.a, stable.b, filter.lotsize)
+		const { quantity, target_quantity, invest, profit, r_result } = this.#calculateReverseProfit(11.0 / base.a, base.a, target.a, stable.b, filter.lotsize)
 		const compare = r_result;
-		const compare_invest = r_invest;
-		const compare_profit = r_profit;
+		const compare_invest = invest;
+		const compare_profit = profit;
 		const compare_symbol = ['USDT', base.s, target.s, stable.s];
-		const compare_quantity = [0, r_quantity, r_target_quantity, r_target_quantity];
+		const compare_quantity = [0, quantity, target_quantity, target_quantity];
 		const compare_price = [0, base.a, target.a, stable.b];
 		const compare_signal = ["none", "BUY", "BUY", "SELL"]
 		const compare_pattern = 'B';
@@ -129,16 +129,13 @@ class Arbitrage {
 							pattern: compare_pattern
 						}, {
 							symbol: compare_symbol[1],
-							price: compare_price[1],
-							signal: compare_signal[1]
+							price: compare_price[1]
 						}, {
 							symbol: compare_symbol[2],
-							price: compare_price[2],
-							signal: compare_signal[2]
+							price: compare_price[2]
 						}, {
 							symbol: compare_symbol[3],
-							price: compare_price[3],
-							signal: compare_signal[3]
+							price: compare_price[3]
 						}];
 					await user.arbitrage({ data },(ipr)=>{
 						const quantity = this.#lot(ipr / stablePrice, lotsize);
@@ -154,7 +151,7 @@ class Arbitrage {
 		}
 		else if (compare > 100&&compare < Infinity)
 		{
-			this.#log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
+			//this.#log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
 			
 		}
 	}
@@ -176,16 +173,13 @@ class Arbitrage {
 							filter:filter
 						}, {
 							symbol: compare_symbol[1],
-							price: compare_price[1],
-							signal: compare_signal[1]
+							price: compare_price[1]
 						}, {
 							symbol: compare_symbol[2],
-							price: compare_price[2],
-							signal: compare_signal[2]
+							price: compare_price[2]
 						}, {
 							symbol: compare_symbol[3],
-							price: compare_price[3],
-							signal: compare_signal[3]
+							price: compare_price[3]
 						}];
 					await user.arbitrage({ data },(ipr)=>{
 						const quantity = this.#lot(ipr / stablePrice,'0.00001' );
@@ -201,7 +195,7 @@ class Arbitrage {
 		}
 		else if (compare > 100&&compare < Infinity)
 		{
-			this.#log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
+			//this.#log(`Found arbitrage ${compare} % Lower Setting symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
 			
 		}
 	}

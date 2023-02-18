@@ -3,6 +3,7 @@ class Socket {
 	#socket;
 	#clients = [];
 	constructor(io) {
+		this.ipaddress = [];
 		this.#socket = io;
 		this.users = [];
 		this.clientResponse = new Map();
@@ -10,6 +11,7 @@ class Socket {
 		this.#socket.on('connection', (socket) => {
 			const clientsCount = this.#socket.engine.clientsCount;
 			socket.emit('authenticated',`server-${clientsCount} connected`)
+			socket.emit('ipaddress',`getipaddress`)
 			console.log(`server-${clientsCount} connected`);
 			this.#clients.push({
 				name: `server-${clientsCount}`,
@@ -27,6 +29,10 @@ class Socket {
 			});
 
 			socket.on('delete', (res) => {
+				this.clientResponse.set(res.id, res);
+			});
+
+			socket.on('rmorder', (res) => {
 				this.clientResponse.set(res.id, res);
 			});
 
@@ -48,6 +54,15 @@ class Socket {
 
 			socket.on('admindelete', (res) => {
 				this.clientResponse.set(res.id, res);
+			});
+
+			socket.on('adminrmorder', (res) => {
+				this.clientResponse.set(res.id, res);
+			});
+
+			socket.on('ipaddress', (res) => {
+				this.clientResponse.set(res.id, res);
+				this.ipaddress.push(res.ip);
 			});
 		});
 	}

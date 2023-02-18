@@ -28,6 +28,10 @@ class UserService {
   getAdminBoard() {
     return axios.get(API_URL + 'admin', { headers: authHeader() });
   }
+
+  getIPAddress() {
+    return axios.get(API_URL + 'getserveraddress');
+  }
 }
 
 export default new UserService();

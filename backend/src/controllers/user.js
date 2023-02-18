@@ -98,37 +98,72 @@ exports.login = (req, res) => {
 };
 
 exports.add = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"],`user :: ${req.body.label} add worker`);
 	socket.response(req, res);
 };
 
 exports.delete = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"],`user :: ${req.body.label} delete worker`);
 	socket.response(req, res);
 };
 
 exports.userdata = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
 	socket.response(req, res);
 };
 
 exports.edit = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"],`user :: ${req.body.label} edit worker`);
 	socket.response(req, res);
 };
 
 exports.alluser = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"],`user :: ${req.body.label} get all user`);
 	socket.response(req, res);
 };
 
+exports.rmorder = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
+	log(req.headers["x-real-ip"],`user :: ${req.body.label} remove order`);
+	socket.response(req, res);
+};
+
 exports.adminedit = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"],`user :: ${req.body.label} edit user by admin`);
 	socket.response(req, res);
 };
 
 exports.admindelete = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"],`user :: ${req.body.label} delete user by admin`);
 	socket.response(req, res);
+};
+
+exports.adminrmorder = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
+	log(req.headers["x-real-ip"],`user :: ${req.body.label} remove order by admin`);
+	socket.response(req, res);
+};
+
+exports.getipaddress = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
+	log(req.headers["x-real-ip"],`get ip address`);
+	res.status(200).json({
+		ip:req.headers["x-real-ip"]
+	});
+};
+
+exports.getserveraddress = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
+	log(req.headers["x-real-ip"],`get server address`);
+	res.status(200).json({
+		ip:socket.ipaddress
+	});
 };
 // exports.arbitrage = (req, res) => {
 // 	socket.arbitrage(req,res);
