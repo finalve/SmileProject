@@ -125,7 +125,7 @@ class Worker {
 							if (order.data[0].pattern === "A") {
 								if (order.response.symbol === 'BTCUSDT') {
 									this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
-									let lot_btc = order.data.userIPR.true_quantity > 0 ? this.#lot(order.data.userIPR.true_quantity - json.quantity, '0.00000001') : 0;
+									let lot_btc = order.data.userIPR.true_quantity > 0 ? this.#lot(order.data.userIPR.true_quantity, '0.00000001') : 0;
 									let lot_usdt = lot_btc > 0 ? this.#lot(lot_btc * order.data[3].price, '0.000001') : 0;
 									let profit_origin = parseFloat(json.quote) + parseFloat(lot_usdt)
 									let profit = profit_origin - order.data.userIPR.invest

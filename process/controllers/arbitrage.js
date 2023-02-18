@@ -141,7 +141,8 @@ class Arbitrage {
 						const quantity = this.#lot(ipr / stablePrice, lotsize);
 						const invest = this.#lot(quantity * stablePrice, '0.0001');
 						const target_quantity = this.#lot(quantity * targetPrice,'0.00001');
-						const true_quantity = this.#lot(quantity * targetPrice, '0.00000001');
+						const true_target_quantity = this.#lot(quantity * targetPrice, '0.00000001');
+						const true_quantity = true_target_quantity - target_quantity
 						return {invest,quantity,target_quantity,true_quantity}
 					});
 				});
