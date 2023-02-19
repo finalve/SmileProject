@@ -149,9 +149,9 @@ const Content = (prop) => {
 							<div className="collapse" id="ui-basic">
 								<ul className="nav flex-column sub-menu">
 									<li className="nav-item"> <a className="nav-link" href="/"><i className="menu-icon mdi mdi-account-card-details"></i>Info</a></li>
-									<li className="nav-item"> <a className="nav-link" href="/"><i className="menu-icon mdi mdi-logout" onClick={() => {
+									<li className="nav-item"  onClick={() => {
 										prop.logOut(prop.state);
-									}}></i>Sign out</a></li>
+									}}> <a className="nav-link" href="/"><i className="menu-icon mdi mdi-logout"></i>Sign out</a></li>
 								</ul>
 							</div>
 						</li>
