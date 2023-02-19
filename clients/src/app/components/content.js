@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AuthService from "../services/user.service";
-import { Button, Form, Modal } from 'react-bootstrap';
+import { Button, Modal } from 'react-bootstrap';
 const submitAdd = (apiData) => {
 	AuthService.userAdd(apiData).then((res) => {
 		window.location.reload()
@@ -30,6 +30,9 @@ const Content = (prop) => {
 	const [timerUser, setUsertimer] = useState(false);
 	const [timerAlive, setAlivetimer] = useState(false);
 	const [ipaddress, setIPaddress] = useState([]);
+
+	const [page, setPage] = useState();
+
 	const setInput = (e) => {
 		const { name, value } = e.target;
 		setData((prev) => {
@@ -148,10 +151,29 @@ const Content = (prop) => {
 							</a>
 							<div className="collapse" id="ui-basic">
 								<ul className="nav flex-column sub-menu">
-									<li className="nav-item"> <a className="nav-link" href="/"><i className="menu-icon mdi mdi-account-card-details"></i>Info</a></li>
-									<li className="nav-item"  onClick={() => {
+									<li className="nav-item"> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-account-card-details"></i>Info</a></li>
+									<li className="nav-item" onClick={() => {
 										prop.logOut(prop.state);
-									}}> <a className="nav-link" href="/"><i className="menu-icon mdi mdi-logout"></i>Sign out</a></li>
+									}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-logout"></i>Sign out</a></li>
+								</ul>
+							</div>
+						</li>
+						<li className="nav-item nav-category">Process</li>
+						<li className="nav-item">
+							<a className="nav-link" data-bs-toggle="collapse" href="#ui-process" aria-expanded="false" aria-controls="ui-basic">
+								<i className="menu-icon mdi mdi-folder"></i>
+								<span className="menu-title">Process</span>
+								<i className="menu-arrow"></i>
+							</a>
+							<div className="collapse" id="ui-process">
+								<ul className="nav flex-column sub-menu">
+								<li className="nav-item"> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
+									<li className="nav-item" onClick={handleShow}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
+									<li className="nav-item" onClick={() => {
+										AuthService.userDelete();
+										response();
+										setError(true);
+									}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-folder-remove"></i>Remove</a></li>
 								</ul>
 							</div>
 						</li>
@@ -217,14 +239,6 @@ const Content = (prop) => {
 														<div className='d-flex justify-content-start'>
 															<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Alive</div>
 															<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{time}</div>
-														</div>
-														<div className='d-flex justify-content-center'>
-															<div className='p-2 flex-fill text-end'><Button variant='primary' onClick={handleShow}>VIEW</Button></div>
-															<div className='p-2 flex-fill text-start'><Button variant='danger' onClick={() => {
-																AuthService.userDelete();
-																response();
-																setError(true);
-															}}>REMOVE</Button></div>
 														</div>
 														<div className='d-flex justify-content-center'>
 															<div className='flex-fill bg-primary bg-opacity-75 border-bottom text-light'>Messages</div>

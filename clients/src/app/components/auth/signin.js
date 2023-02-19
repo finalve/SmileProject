@@ -6,17 +6,13 @@ class Signin extends React.Component {
 		super(props);
 		this.onChangeUsername = this.onChangeUsername.bind(this);
 		this.onChangePassword = this.onChangePassword.bind(this);
-		this.showModal = this.showModal.bind(this)
-		this.hideModal = this.hideModal.bind(this);
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.state = {
 			username: '',
 			password: '',
-			modal: props.show,
 			message: ''
 		};
-		this.stateLogin = props.stateLogin;
-		this.stateSignup = props.stateSignup;
+		this.stateToggle = props.stateToggle;
 		this.navState = props.state;
 	}
 	onChangeUsername(e) {
@@ -107,7 +103,7 @@ class Signin extends React.Component {
 													<button className="btn btn-block btn-warning btn-lg font-weight-medium auth-form-btn w-100" onClick={this.handleSubmit}>SIGN IN</button>
 												</div>
 												<div className="text-center mt-4 fw-light">
-													Don't have an account? <a href="#" className="text-warning" onClick={() => { this.stateLogin(false); this.stateSignup(true) }}>Create</a>
+													Don't have an account? <a href="#" className="text-warning" onClick={() => { this.stateToggle(false);}}>Create</a>
 												</div>
 											</div>
 										</div>

@@ -16,10 +16,7 @@ const logOut = (state) => {
 
 const App = () => {
 	const [state, setState] = useState(userDefault);
-
-	const [login, setLogin] = useState(false);
-	const [signup, setSignup] = useState(false);
-
+	const [toggle, setToggle] = useState(false);
 	useEffect(() => {
 		const user = AuthService.getCurrentUser();
 		if (user) {
@@ -37,23 +34,16 @@ const App = () => {
 			{!currentUser ?
 				(
 					<>
-						{signup ?
-							< Signup show={signup} state={setState} stateLogin={setLogin} stateSignup={setSignup} />
+						{toggle ?
+							<Signin state={setState} stateToggle={setToggle} />
 							:
-							<Signin show={login} state={setState} stateLogin={setLogin} stateSignup={setSignup} />
+							< Signup state={setState} stateToggle={setToggle} />
 						}
 					</>
 				)
 				:
 				(
-					<BrowserRouter>
-						<Routes>
-							<Route path="/" element={<Content logOut={logOut} state={setState}/>}>
-								<Route index element={<Content logOut={logOut} state={setState}/>} />
-								<Route path="/dashboard" element={<Dashboard />} />
-							</Route>
-						</Routes>
-					</BrowserRouter>
+					<Content logOut={logOut} state={setState}/>
 				)
 			}
 		</>

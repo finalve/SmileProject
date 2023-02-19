@@ -8,19 +8,15 @@ class Signup extends React.Component {
 		this.onChangeUsername = this.onChangeUsername.bind(this);
 		this.onChangePassword = this.onChangePassword.bind(this);
 		this.onChangeRe_Password = this.onChangeRe_Password.bind(this);
-		this.showModal = this.showModal.bind(this)
-		this.hideModal = this.hideModal.bind(this);
 		this.handleSubmit = this.handleSubmit.bind(this);
 		this.state = {
 			label: '',
 			username: '',
 			password: '',
 			re_password: '',
-			modal: props.show,
 			message: ''
-		};
-		this.stateLogin = props.stateLogin;
-		this.stateSignup = props.stateSignup;
+		};	
+		this.stateToggle = props.stateToggle;
 		this.navState = props.state;
 	}
 	onChangeLabel(e) {
@@ -132,7 +128,7 @@ class Signup extends React.Component {
 													<button className="btn btn-block btn-warning btn-lg font-weight-medium auth-form-btn w-100" onClick={this.handleSubmit}>SIGN UP</button>
 												</div>
 												<div className="text-center mt-4 fw-light">
-													Have an account? <a href="#" className="text-warning" onClick={() => { this.stateLogin(true); this.stateSignup(false) }}>Signin</a>
+													Have an account? <a href="#" className="text-warning" onClick={() => { this.stateToggle(true); }}>Signin</a>
 												</div>
 											</div>
 										</div>
