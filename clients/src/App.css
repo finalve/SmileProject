@@ -1,39 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@100;300;400;500;600;700&display=swap');
 
-.App {
-  text-align: center;
+* {
+  font-family: 'Prompt', sans-serif;
+  font-size: 12px !important;
+  color: #fff !important;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.navbar {
+  background: transparent;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+body,
+.content-wrapper,
+.card-body,
+.auth-form-light,
+.sidebar,
+.navbar-menu-wrapper,
+.navbar-brand-wrapper {
+  background: #232227 !important;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.sub-menu,
+.hover-open .menu-title {
+  background: #1a191e !important;
 }
 
-.App-link {
-  color: #61dafb;
+.sub-menu .nav-link {
+  font-size: 12px !important;
+  font-weight: 400 !important;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.nav .nav-item .nav-link {
+  background: #1a191e !important;
+  padding: 15px !important;
+}
+
+.nav .nav-item .active {
+  background: #cd9c00d9 !important;
+}
+
+.form-control {
+  background: transparent !important;
+}
+
+.alert-danger {
+  background: #e93535e8;
+  border-color: #ff2817;
+}
+
+.alert-dark {
+  background-color: #18181847;
+}
+
+.menu-title,
+.nav-category {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+}
+
+.menu-icon {
+  margin-left: 10px;
+}
+
+.navbar-brand-wrapper {
+  background: transparent !important;
+}
+
+small,
+label,
+input,
+.alert {
+  font-size: 12px !important;
+}
+
+.card {
+  -webkit-box-shadow: 0 0 0 0 rgb(22 22 22 / 11%), 0 4px 16px 0 rgb(0 0 0 / 33%);
+}
+
+.form-control,
+.asColorPicker-input,
+.dataTables_wrapper select,
+.select2-container--default .select2-selection--single,
+.select2-container--default .select2-selection--single .select2-search__field,
+.typeahead,
+.tt-query,
+.tt-hint,
+.alert-dark {
+  border: 1px solid #ffffff12;
 }

@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Navbar, Nav, Container, Button, Form } from 'react-bootstrap';
 import AuthService from "./app/services/auth.service";
-import { Signin, Content, Signup, Dashboard } from './app/components';
-import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
-import 'bootstrap/dist/js/bootstrap.bundle';
+import { Signin, Signup, Content, Dashboard } from './app/components';
 import './App.css';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 const userDefault = {
 	showModeratorBoard: false,
 	showAdminBoard: false,
@@ -21,6 +19,7 @@ const App = () => {
 
 	const [login, setLogin] = useState(false);
 	const [signup, setSignup] = useState(false);
+
 	useEffect(() => {
 		const user = AuthService.getCurrentUser();
 		if (user) {
@@ -31,65 +30,33 @@ const App = () => {
 			});
 		}
 	}, [])
-
 	const { currentUser, showAdminBoard } = state;
-	const navBar = currentUser ?
-		(
-			<>
-				{
-					showAdminBoard && (
-						<Nav >
-							<Button variant="primary" onClick={() => <Dashboard />} >Users</Button>
-						</Nav>
-					)
-				}
-				<Nav className="ms-auto">
-					<Button variant="primary" onClick={() => logOut(setState)} >Sign Out</Button>
-				</Nav>
-			</>
-		)
-		:
-		(
-			<Nav className="ms-auto">
-				<Button variant="primary" onClick={() => setLogin(true)}>Sign in</Button>
-				<Button variant="primary" onClick={() => setSignup(true)}>Sign up</Button>
-			</Nav>
-		);
-	return (<div className='font-monospace'>
-		<Navbar collapseOnSelect expand="lg" bg="primary" variant="dark">
-			<Navbar.Brand><Button variant="primary" onClick={() => window.location.reload()}>Style-V</Button></Navbar.Brand>
-			<Navbar.Toggle aria-controls="responsive-navbar-nav" />
-			<Navbar.Collapse id="responsive-navbar-nav">{navBar}</Navbar.Collapse>
-		</Navbar>
-		<Container>
-			{login &&
+
+	return (
+		<>
+			{!currentUser ?
 				(
-					<Signin show={login} state={setState} />
-				)}
-			{signup &&
-				(
-					<Signup show={signup} state={setState} />
-				)}
-			{currentUser ?
+					<>
+						{signup ?
+							< Signup show={signup} state={setState} stateLogin={setLogin} stateSignup={setSignup} />
+							:
+							<Signin show={login} state={setState} stateLogin={setLogin} stateSignup={setSignup} />
+						}
+					</>
+				)
+				:
 				(
 					<BrowserRouter>
 						<Routes>
-							<Route path="/" element={<Content logOut={logOut} state={setState} />}>
-								<Route index element={<Content logOut={logOut} state={setState} />} />
+							<Route path="/" element={<Content logOut={logOut} state={setState}/>}>
+								<Route index element={<Content logOut={logOut} state={setState}/>} />
 								<Route path="/dashboard" element={<Dashboard />} />
 							</Route>
 						</Routes>
 					</BrowserRouter>
 				)
-				:
-				(
-					<div style={{ fontSize: "5vw" }} >
-						Welcome To Project By Style-V
-					</div>
-				)
 			}
-		</Container>
-	</div>
-	)
+		</>
+	);
 }
 export default App;

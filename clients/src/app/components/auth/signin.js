@@ -15,6 +15,8 @@ class Signin extends React.Component {
 			modal: props.show,
 			message: ''
 		};
+		this.stateLogin = props.stateLogin;
+		this.stateSignup = props.stateSignup;
 		this.navState = props.state;
 	}
 	onChangeUsername(e) {
@@ -45,15 +47,15 @@ class Signin extends React.Component {
 		}
 
 		AuthService.login(this.state).then((res) => {
-				const user = AuthService.getCurrentUser();
-				if (user) {
-					this.navState({
-						currentUser: user,
-						showModeratorBoard: user.roles.includes("ROLE_MODERATOR"),
-						showAdminBoard: user.roles.includes("ROLE_ADMIN"),
-					});
-				}
-				this.hideModal();
+			const user = AuthService.getCurrentUser();
+			if (user) {
+				this.navState({
+					currentUser: user,
+					showModeratorBoard: user.roles.includes("ROLE_MODERATOR"),
+					showAdminBoard: user.roles.includes("ROLE_ADMIN"),
+				});
+			}
+			this.hideModal();
 		},
 			error => {
 				const resMessage =
@@ -72,42 +74,50 @@ class Signin extends React.Component {
 	};
 	render() {
 		return (
-			<Modal show={this.state.modal} onHide={this.hideModal} size="md" centered onKeyPress={event => {
+			<div className="container-scroller" onKeyDown={event => {
 				if (event.key === 'Enter') {
 					this.handleSubmit()
 				}
 			}}>
-				<Modal.Header closeButton>
-					<Modal.Title>Sign in</Modal.Title>
-				</Modal.Header>
-				<Modal.Body>
-					<Form onSubmit={this.handleSubmit}>
-						<Form.Group className="mb-3" controlId="formusername">
-							<Form.Label>Username</Form.Label>
-							<Form.Control type="text" placeholder="Enter Username" value={this.state.username} onChange={this.onChangeUsername} required />
-							<Form.Control.Feedback type="invalid">
-								Please provide a valid city.
-							</Form.Control.Feedback>
-						</Form.Group>
-						<Form.Group className="mb-3" controlId="formpassword">
-							<Form.Label>Password</Form.Label>
-							<Form.Control type="password" placeholder="Enter Password" value={this.state.password} onChange={this.onChangePassword} required />
-						</Form.Group>
-						{
-							this.state.message &&
-							(<Form.Group className='mb-3'>
-								<Alert key="danger" variant="danger">
-									{this.state.message}
-								</Alert>
-							</Form.Group>)
-						}
-					</Form>
-				</Modal.Body>
-				<Modal.Footer>
-					<Button variant="primary"
-						onClick={this.handleSubmit}>Sign In</Button>
-				</Modal.Footer>
-			</Modal>
+				<div className="container-fluid page-body-wrapper full-page-wrapper">
+					<div className="content-wrapper d-flex align-items-center auth px-0">
+						<div className="row w-100 mx-0">
+							<div className="col-lg-4 mx-auto">
+								<div className="card">
+									<div className="card-body">
+										<div className="auth-form-light text-left py-5 px-4 px-sm-5">
+											{
+												this.state.message && (
+													<div className="alert alert-danger mb-4" role="alert">{this.state.message}</div>
+												)
+											}
+											<div className="brand-logo text-center">
+												<img src="https://seeklogo.com/images/B/binance-usd-busd-logo-1439204E1C-seeklogo.com.png" alt="logo" />
+											</div>
+											<h4>Hello! Welcome To Project ABT By Style-V</h4>
+											<h6 className="fw-light">Sign in to continue.</h6>
+											<div className="pt-3">
+												<div className="form-group">
+													<input type="text" className="form-control form-control-lg" value={this.state.username} onChange={this.onChangeUsername} placeholder="Username" required />
+												</div>
+												<div className="form-group">
+													<input type="password" className="form-control form-control-lg" value={this.state.password} onChange={this.onChangePassword} placeholder="Password" required />
+												</div>
+												<div className="mt-3">
+													<button className="btn btn-block btn-warning btn-lg font-weight-medium auth-form-btn w-100" onClick={this.handleSubmit}>SIGN IN</button>
+												</div>
+												<div className="text-center mt-4 fw-light">
+													Don't have an account? <a href="#" className="text-warning" onClick={() => { this.stateLogin(false); this.stateSignup(true) }}>Create</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 		);
 	}
 }
