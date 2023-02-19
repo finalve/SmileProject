@@ -216,6 +216,7 @@ class Socket {
 					alive: foundWorker.alive,
 					pnl: parseFloat(foundWorker.pnl).toFixed(8),
 					btc: parseFloat(foundWorker.btc).toFixed(8),
+					bnb: parseFloat(foundWorker.BNB).toFixed(8),
 					takeOrder: foundWorker.takeOrder,
 					success: foundWorker.success,
 					orderOpen: foundWorker.openOrder

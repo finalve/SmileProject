@@ -20,7 +20,7 @@ class Socket {
 
 			socket.on('disconnect', () => {
 				const FoundServer = this.#clients.find(server => server.id === socket.id);
-				this.#clients = this.#clients.filter(server => server !== FoundServer);
+				this.#clients = this.#clients.filter(server => server.id !== FoundServer.id);
 				console.log(`${FoundServer.name} Disconnected`);
 			});
 

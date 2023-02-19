@@ -16,7 +16,7 @@ const logOut = (state) => {
 
 const App = () => {
 	const [state, setState] = useState(userDefault);
-	const [toggle, setToggle] = useState(false);
+	const [toggle, setToggle] = useState(true);
 	useEffect(() => {
 		const user = AuthService.getCurrentUser();
 		if (user) {

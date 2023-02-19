@@ -131,11 +131,6 @@ class Worker {
 									let profit = profit_origin - order.data.userIPR.invest
 									this.pnl += profit;
 									this.btc += parseFloat(lot_btc);
-									console.log(profit_origin)
-									console.log(lot_usdt)
-									console.log(lot_btc)
-									console.log(json.quantity)
-									console.log(order.data.userIPR)
 									this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
 									this.#pushSuccess(`Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
 									this.takeOrder += 1;
@@ -249,6 +244,14 @@ class Worker {
 	#lot(price, size) {
 		const decimalSize = size.toString().split('.')[1]?.length || 0;
 		return Number(Math.floor(price / size) * size).toFixed(decimalSize);
+	}
+	#pushSuccess(msg) {
+		let d = new Date();
+		let n = d.toLocaleTimeString();
+		let message = `${n} ${msg}`
+		if (this.success > 100)
+			this.success.shift();
+		this.success.push(message);
 	}
 	#pushSuccess(msg) {
 		let d = new Date();

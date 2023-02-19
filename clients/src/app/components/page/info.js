@@ -11,17 +11,6 @@ export default function Info({ data,time }) {
 		<hr></hr>
 		<div style={{ borderRadius: "50%" }}>
 			<div className='d-flex justify-content-start'>
-				<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Label</div>
-				<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.label}</div>
-			</div>
-			<div className='d-flex justify-content-start'>
-				<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Status</div>
-				{data.status ?
-					<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-success text-end'>TRUE</div>
-					: <div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-danger text-end'>{data.error}</div>
-				}
-			</div>
-			<div className='d-flex justify-content-start'>
 				<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Balance</div>
 				<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.invesment}</div>
 			</div>
@@ -40,6 +29,10 @@ export default function Info({ data,time }) {
 			<div className='d-flex justify-content-start'>
 				<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>BTC</div>
 				<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.btc}</div>
+			</div>
+			<div className='d-flex justify-content-start'>
+				<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>BNB</div>
+				<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.bnb}</div>
 			</div>
 			<div className='d-flex justify-content-start'>
 				<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Alive</div>

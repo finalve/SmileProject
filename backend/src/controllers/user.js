@@ -98,9 +98,27 @@ exports.login = (req, res) => {
 };
 
 exports.add = (req, res) => {
+
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"],`user :: ${req.body.label} add worker`);
-	socket.response(req, res);
+	User.findOne({ username: req.body.label })
+		.populate("roles", "-__v")
+		.exec((err, user) => {
+			if (err) {
+				res.status(500).json({ message: err });
+				return;
+			}
+			if (!user) {
+				return res.status(400).json({ message: 'User not found' });
+			}
+			user.server = req.body.server
+			newUser.save((err) => {
+				if (err) {
+					return res.status(500).json({ message: err });
+				}
+				socket.response(req, res);
+			});
+		})
 };
 
 exports.delete = (req, res) => {

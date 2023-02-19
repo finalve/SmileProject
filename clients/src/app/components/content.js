@@ -171,22 +171,25 @@ const Content = (prop) => {
 							</a>
 							<div className="collapse" id="ui-basic">
 								<ul className="nav flex-column sub-menu">
-									<li className="nav-item" onClick={() => setPage(0)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-account-card-details"></i>Info</a></li>
+								<li className="nav-item" onClick={() => setPage(0)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-account-card-details"></i>Profile</a></li>
 									<li className="nav-item" onClick={() => {
 										prop.logOut(prop.state);
 									}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-logout"></i>Sign out</a></li>
 								</ul>
 							</div>
 						</li>
-						<li className="nav-item nav-category">Process</li>
+						{data && (
+							<>
+							<li className="nav-item nav-category">Process</li>
 						<li className="nav-item">
-							<a className="nav-link" data-bs-toggle="collapse" href="#ui-process" aria-expanded="false" aria-controls="ui-basic">
+							<a className="nav-link" data-bs-toggle="collapse" href="#ui-process" aria-expanded="false" aria-controls="ui-process">
 								<i className="menu-icon mdi mdi-folder"></i>
 								<span className="menu-title">Process</span>
 								<i className="menu-arrow"></i>
 							</a>
 							<div className="collapse" id="ui-process">
 								<ul className="nav flex-column sub-menu">
+										<li className="nav-item" onClick={() => setPage(0)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-television-guide"></i>Info</a></li>
 									<li className="nav-item" onClick={() => setPage(1)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
 									<li className="nav-item" onClick={() => setPage(2)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
 									<li className="nav-item" onClick={() => {
@@ -198,11 +201,14 @@ const Content = (prop) => {
 							</div>
 						</li>
 
+							</>
+						)}
+						
 						{prop.isAdmin && (
 							<>
 							<li className="nav-item nav-category">Admin</li>
 							<li className="nav-item">
-								<a className="nav-link" data-bs-toggle="collapse" href="#ui-admin" aria-expanded="false" aria-controls="ui-basic">
+								<a className="nav-link" data-bs-toggle="collapse" href="#ui-admin" aria-expanded="false" aria-controls="ui-admin">
 									<i className="menu-icon mdi mdi-folder"></i>
 									<span className="menu-title">Admin</span>
 									<i className="menu-arrow"></i>
