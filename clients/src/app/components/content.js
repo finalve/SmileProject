@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import AuthService from "../services/user.service";
-import { Button, Modal } from 'react-bootstrap';
+import Info from "./page/info";
+import Messages from "./page/messages";
+import Tables from "./page/tables";
 const submitAdd = (apiData) => {
 	AuthService.userAdd(apiData).then((res) => {
 		window.location.reload()
@@ -16,6 +18,7 @@ const parseJwt = (token) => {
 	}
 };
 const Content = (prop) => {
+
 	const [data, response] = useState();
 	const [time, setTime] = useState(null);
 	const [apiData, setData] = useState({
@@ -23,16 +26,12 @@ const Content = (prop) => {
 		apiserect: '',
 		invest: 11
 	});
-	const [show, setShow] = useState(false);
-	const handleClose = () => setShow(false);
-	const handleShow = () => setShow(true);
 	const [_error, setError] = useState(false);
 	const [timerUser, setUsertimer] = useState(false);
 	const [timerAlive, setAlivetimer] = useState(false);
 	const [ipaddress, setIPaddress] = useState([]);
 
-	const [page, setPage] = useState();
-
+	const [page, setPage] = useState(0);
 	const setInput = (e) => {
 		const { name, value } = e.target;
 		setData((prev) => {
@@ -108,6 +107,20 @@ const Content = (prop) => {
 			}
 		}
 	}, [data]);
+
+	const renderState = () => {
+		switch (page) {
+			case 0:
+				return <Info data={data} time={time} />;
+			case 1:
+				return <Messages data={data} />;
+			case 2:
+				return <Tables data={data} />;
+			default:
+				return <Info data={data} time={time} />;
+		}
+	}
+
 	return (
 		<div className="container-scroller">
 			<nav className="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex align-items-top flex-row">
@@ -118,26 +131,33 @@ const Content = (prop) => {
 						</button>
 					</div>
 					<div>
-						<a className="navbar-brand brand-logo" href="/">
+						<a className="navbar-brand brand-logo" href="#">
 							<img src="https://seeklogo.com/images/B/binance-usd-busd-logo-1439204E1C-seeklogo.com.png" alt="logo" />
 						</a>
-						<a className="navbar-brand brand-logo-mini" href="/">
+						{/* <a className="navbar-brand brand-logo-mini" href="#">
 							<img src="https://seeklogo.com/images/B/binance-usd-busd-logo-1439204E1C-seeklogo.com.png" alt="logo" />
-						</a>
+						</a> */}
 					</div>
 				</div>
-				<div className="navbar-menu-wrapper d-flex align-items-top">
+				<div className="text-center navbar-brand-wrapper d-flex align-items-center justify-content-start">
+					<button className="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-bs-toggle="offcanvas">
+						<a className="navbar-brand" href="#">
+							<img src="https://seeklogo.com/images/B/binance-usd-busd-logo-1439204E1C-seeklogo.com.png" alt="logo" />
+						</a>
+					</button>
+				</div>
+				{/* <div className="navbar-menu-wrapper d-flex align-items-top">
 					<ul className="navbar-nav ms-auto"></ul>
 					<button className="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-bs-toggle="offcanvas">
 						<span className="mdi mdi-menu"></span>
 					</button>
-				</div>
+				</div> */}
 			</nav>
 			<div className="container-fluid page-body-wrapper">
 				<nav className="sidebar sidebar-offcanvas" id="sidebar">
 					<ul className="nav">
-						<li className="nav-item">
-							<a className="active nav-link" href="/">
+						<li className="nav-item" onClick={() => setPage(0)}>
+							<a className="active nav-link" href="#">
 								<i className="mdi mdi-grid-large menu-icon"></i>
 								<span className="menu-title">Dashboard</span>
 							</a>
@@ -151,7 +171,7 @@ const Content = (prop) => {
 							</a>
 							<div className="collapse" id="ui-basic">
 								<ul className="nav flex-column sub-menu">
-									<li className="nav-item"> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-account-card-details"></i>Info</a></li>
+									<li className="nav-item" onClick={() => setPage(0)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-account-card-details"></i>Info</a></li>
 									<li className="nav-item" onClick={() => {
 										prop.logOut(prop.state);
 									}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-logout"></i>Sign out</a></li>
@@ -167,8 +187,8 @@ const Content = (prop) => {
 							</a>
 							<div className="collapse" id="ui-process">
 								<ul className="nav flex-column sub-menu">
-								<li className="nav-item"> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
-									<li className="nav-item" onClick={handleShow}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
+									<li className="nav-item" onClick={() => setPage(1)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
+									<li className="nav-item" onClick={() => setPage(2)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
 									<li className="nav-item" onClick={() => {
 										AuthService.userDelete();
 										response();
@@ -177,6 +197,25 @@ const Content = (prop) => {
 								</ul>
 							</div>
 						</li>
+
+						{prop.isAdmin && (
+							<>
+							<li className="nav-item nav-category">Admin</li>
+							<li className="nav-item">
+								<a className="nav-link" data-bs-toggle="collapse" href="#ui-admin" aria-expanded="false" aria-controls="ui-basic">
+									<i className="menu-icon mdi mdi-folder"></i>
+									<span className="menu-title">Admin</span>
+									<i className="menu-arrow"></i>
+								</a>
+								<div className="collapse" id="ui-admin">
+									<ul className="nav flex-column sub-menu">
+										<li className="nav-item" onClick={() => setPage(1)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Users</a></li>
+										<li className="nav-item" onClick={() => setPage(2)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Manage</a></li>
+									</ul>
+								</div>
+							</li>
+							</>
+						)}
 						<li className="nav-item nav-category">Contact</li>
 						<li className="nav-item">
 							<a className="nav-link" href="https://www.facebook.com/Veeangkub" target="_blank">
@@ -196,91 +235,7 @@ const Content = (prop) => {
 										<div className="col-md-12 grid-margin stretch-card">
 											<div className="card">
 												<div className="card-body">
-													<h4 className="card-title mb-0"><i className="enu-icon mdi mdi-label me-2"></i>{data.label}<small className="card-description" style={{ marginLeft: "5px" }}>
-														{data.status ?
-															<span className="text-success">TRUE</span>
-															:
-															<span className="text-danger">{data.error}</span>
-														}
-													</small></h4>
-													<hr></hr>
-													<div style={{ borderRadius: "50%" }}>
-														<div className='d-flex justify-content-start'>
-															<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Label</div>
-															<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.label}</div>
-														</div>
-														<div className='d-flex justify-content-start'>
-															<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Status</div>
-															{data.status ?
-																<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-success text-end'>TRUE</div>
-																: <div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-danger text-end'>{data.error}</div>
-															}
-														</div>
-														<div className='d-flex justify-content-start'>
-															<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Balance</div>
-															<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.invesment}</div>
-														</div>
-														<div className='d-flex justify-content-start'>
-															<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>IPR</div>
-															<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.ipr}</div>
-														</div>
-														<div className='d-flex justify-content-start'>
-															<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Order</div>
-															<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.len}/{data.maxlen}</div>
-														</div>
-														<div className='d-flex justify-content-start'>
-															<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>USDT</div>
-															<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.pnl}</div>
-														</div>
-														<div className='d-flex justify-content-start'>
-															<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>BTC</div>
-															<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{data.btc}</div>
-														</div>
-														<div className='d-flex justify-content-start'>
-															<div className='p-2 w-25 bg-primary border-bottom bg-opacity-75 text-light'>Alive</div>
-															<div className='p-2 flex-fill bg-secondary border-bottom bg-opacity-75 text-light text-end'>{time}</div>
-														</div>
-														<div className='d-flex justify-content-center'>
-															<div className='flex-fill bg-primary bg-opacity-75 border-bottom text-light'>Messages</div>
-														</div>
-														{data.success.map((element, index) =>
-														(<div className='d-flex justify-content-center' key={index}>
-															<div className='flex-fill bg-secondary bg-opacity-75 border-bottom text-light'>{element}</div>
-														</div>)
-														)}
-													</div>
-													<Modal
-														show={show}
-														onHide={handleClose}
-														backdrop="static"
-														keyboard={false}
-														size="xl"
-													>
-														<Modal.Header closeButton>
-															<Modal.Title>Arbitrage</Modal.Title>
-														</Modal.Header>
-														<Modal.Body>
-															<div className='d-flex justify-content-center bg-primary bg-opacity-75'>
-																<div className='p-2 w-25 border text-light'>Arbitrage</div>
-																<div className='p-2 w-25 border text-light text-center'>Status</div>
-																<div className='p-2 w-25 border text-light text-center'>Symbol</div>
-																<div className='p-2 w-25 border text-light text-center'>Profit</div>
-															</div>
-															{data.orderOpen.map((element, index) =>
-															(<div className='d-flex justify-content-center bg-secondary bg-opacity-75' key={index}>
-																<div className='p-2 w-25 border text-light text-start'>{element.data[1].symbol} {element.data[2].symbol} {element.data[3].symbol}</div>
-																<div className='p-2 w-25 border text-light text-center'>{element.response.status}</div>
-																<div className='p-2 w-25 border text-light text-center'>{element.response.symbol}</div>
-																<div className='p-2 w-25 border text-light text-center'>{element.data[0].result} %</div>
-															</div>)
-															)}
-														</Modal.Body>
-														<Modal.Footer>
-															<Button variant="secondary" onClick={handleClose}>
-																Close
-															</Button>
-														</Modal.Footer>
-													</Modal>
+													{renderState()}
 												</div>
 											</div>
 										</div>

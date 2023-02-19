@@ -43,7 +43,7 @@ const App = () => {
 				)
 				:
 				(
-					<Content logOut={logOut} state={setState}/>
+					<Content logOut={logOut} state={setState} isAdmin={showAdminBoard}/>
 				)
 			}
 		</>
