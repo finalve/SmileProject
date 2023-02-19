@@ -1,11 +1,31 @@
-'use strict'
+const redis = require('redis');
 
-const { Spot } = require('@binance/connector');
+const client = redis.createClient();
 
-const apiKey = 'pQHZnNrAQ8I0lHHsNKrk8VCSDeSmcBwVvBsxWqBF6ymRY1B6RMXNo3Y6optOPFjN'
-const apiSecret = 'LYuvnjN6PoFVDk685zBK9cGjYkh9tC4n32DVgVvYbPcZe56kaVx72yxhjH7VnjgC'
-const client = new Spot(apiKey, apiSecret)
+const users = [{a:1,b:2},{a:1,b:2},{a:1,b:2},{a:1,b:2}];
+(async () => {
+    await client.connect();
+})();
 
-client.openOrders()
-  .then(response => client.logger.log(response.data))
-  .catch(error => client.logger.error(error))
+client.on('connect', () => console.log('Redis Client Connected'));
+client.on('error', (err) => console.log('Redis Client Connection Error', err));
+
+(async () => {
+    await client.set('key',users);
+})();
+
+(async () => {
+	const key = await client.get('key')
+	
+console.log(key)
+})();
+
+(async () => {
+    await client.set('key','value2');
+})();
+
+(async () => {
+	const key = await client.get('key')
+	
+console.log(key)
+})();

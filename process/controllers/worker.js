@@ -1,4 +1,6 @@
 const { Spot } = require('@binance/connector');
+const redis = require('redis');
+const redisClient = redis.createClient();
 class Worker {
 	#client;
 	#wsRef;
@@ -380,6 +382,7 @@ class Worker {
 		} catch (error) {
 			this.errorMessage = error.response.data?.msg;
 			this.#error(error.response.data)
+			this.#pushSuccess(`Symbol [${symbol}] quantity [${quantity}] price [${price}] error: ${error.response.data?.msg}`);
 			return error;
 		}
 	}

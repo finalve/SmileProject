@@ -6,9 +6,12 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const BASE = '103.252.119.56';
 const API_URL = `http://${BASE}/api/`;
+const redis = require('redis');
+const client = redis.createClient();
 class Socket {
 	#socket;
 	#ipaddress;
+	#users = [];
 	constructor() {
 		this.#getipaddress().then((response) => {
 			this.#ipaddress = response.data.ip;
@@ -43,6 +46,11 @@ class Socket {
 			}
 
 			const newWorker = new Worker(req);
+			this.#users.push(req);
+			(async () => {
+				await client.set('users',this.#users);
+			})();
+			
 			Instance.worker.push(newWorker);
 			this.#socket.emit('add', {
 				status: 200,
