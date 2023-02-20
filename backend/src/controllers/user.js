@@ -7,10 +7,10 @@ const Role = db.role;
 const User = db.user;
 
 var socket = null;
-const log = (ip,msg) =>{
+const log = (ip, msg) => {
 	var d = new Date();
-		var n = d.toLocaleTimeString();
-		console.log(`${n} IP:[${ip}] message:[${msg}]`)
+	var n = d.toLocaleTimeString();
+	console.log(`${n} IP:[${ip}] message:[${msg}]`)
 }
 exports.instance = (_socket) => socket = _socket;
 exports.register = (req, res) => {
@@ -40,14 +40,15 @@ exports.register = (req, res) => {
 				if (err) {
 					return res.status(500).json({ message: err });
 				}
-				log(req.headers["x-real-ip"],`user [${newUser.label} register]`);
-				const token = jwt.sign({ ip:req.headers["x-real-ip"],label: newUser.label, username: newUser.username, userId: newUser._id }, config.secret, { expiresIn: '6h' });
+				log(req.headers["x-real-ip"], `user [${newUser.label} register]`);
+				const token = jwt.sign({ ip: req.headers["x-real-ip"], label: newUser.label, username: newUser.username, userId: newUser._id , server: 'server-1' }, config.secret, { expiresIn: '6h' });
 				var authorities = [];
 				authorities.push("ROLE_" + role.name.toUpperCase());
 				res.status(200).json({
 					userId: newUser._id,
 					label: newUser.label,
 					username: newUser.username,
+					server:'server-1',
 					roles: authorities,
 					accessToken: token
 				});
@@ -79,51 +80,40 @@ exports.login = (req, res) => {
 				return res.status(401).json({ message: 'Incorrect password' });
 			}
 
-			const token = jwt.sign({ ip:req.headers["x-real-ip"],label: user.label, username: user.username, userId: user._id }, config.secret, { expiresIn: '6h' });
+			const token = jwt.sign({ ip: req.headers["x-real-ip"], label: user.label, username: user.username, userId: user._id,server:user.server }, config.secret, { expiresIn: '6h' });
 			var authorities = [];
 
 			for (let i = 0; i < user.roles.length; i++) {
 				authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
 			}
-			log(req.headers["x-real-ip"],`user [${user.label} login]`);
+			log(req.headers["x-real-ip"], `user [${user.label} login]`);
 			res.status(200).json({
-				ip:req.headers["x-real-ip"],
+				ip: req.headers["x-real-ip"],
 				userId: user._id,
 				label: user.label,
 				username: user.username,
+				server:user.server,
 				roles: authorities,
-				accessToken: token
+				accessToken: token,
 			});
 		});
 };
 
 exports.add = (req, res) => {
-
 	req.body._ip = req.headers["x-real-ip"];
-	log(req.headers["x-real-ip"],`user :: ${req.body.label} add worker`);
-	User.findOne({ username: req.body.label })
-		.populate("roles", "-__v")
-		.exec((err, user) => {
+	log(req.headers["x-real-ip"], `user :: ${req.body.label} add worker`);
+	User.updateOne({ label: req.body.label }, { server: req.body.server }
+		,(err) => {
 			if (err) {
-				res.status(500).json({ message: err });
-				return;
+				return res.status(500).json({ message: err });
 			}
-			if (!user) {
-				return res.status(400).json({ message: 'User not found' });
-			}
-			user.server = req.body.server
-			newUser.save((err) => {
-				if (err) {
-					return res.status(500).json({ message: err });
-				}
-				socket.response(req, res);
-			});
+			socket.response(req, res);
 		})
 };
 
 exports.delete = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
-	log(req.headers["x-real-ip"],`user :: ${req.body.label} delete worker`);
+	log(req.headers["x-real-ip"], `user :: ${req.body.label} delete worker`);
 	socket.response(req, res);
 };
 
@@ -134,53 +124,53 @@ exports.userdata = (req, res) => {
 
 exports.edit = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
-	log(req.headers["x-real-ip"],`user :: ${req.body.label} edit worker`);
+	log(req.headers["x-real-ip"], `user :: ${req.body.label} edit worker`);
 	socket.response(req, res);
 };
 
 exports.alluser = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
-	log(req.headers["x-real-ip"],`user :: ${req.body.label} get all user`);
+	log(req.headers["x-real-ip"], `user :: ${req.body.label} get all user`);
 	socket.response(req, res);
 };
 
 exports.rmorder = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
-	log(req.headers["x-real-ip"],`user :: ${req.body.label} remove order`);
+	log(req.headers["x-real-ip"], `user :: ${req.body.label} remove order`);
 	socket.response(req, res);
 };
 
 exports.adminedit = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
-	log(req.headers["x-real-ip"],`user :: ${req.body.label} edit user by admin`);
+	log(req.headers["x-real-ip"], `user :: ${req.body.label} edit user by admin`);
 	socket.response(req, res);
 };
 
 exports.admindelete = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
-	log(req.headers["x-real-ip"],`user :: ${req.body.label} delete user by admin`);
+	log(req.headers["x-real-ip"], `user :: ${req.body.label} delete user by admin`);
 	socket.response(req, res);
 };
 
 exports.adminrmorder = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
-	log(req.headers["x-real-ip"],`user :: ${req.body.label} remove order by admin`);
+	log(req.headers["x-real-ip"], `user :: ${req.body.label} remove order by admin`);
 	socket.response(req, res);
 };
 
 exports.getipaddress = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
-	log(req.headers["x-real-ip"],`get ip address`);
+	log(req.headers["x-real-ip"], `get ip address`);
 	res.status(200).json({
-		ip:req.headers["x-real-ip"]
+		ip: req.headers["x-real-ip"]
 	});
 };
 
 exports.getserveraddress = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
-	log(req.headers["x-real-ip"],`get server address`);
+	log(req.headers["x-real-ip"], `get server address`);
 	res.status(200).json({
-		ip:socket.ipaddress
+		ip: socket.ipaddress
 	});
 };
 // exports.arbitrage = (req, res) => {

@@ -10,9 +10,9 @@ class Socket {
 		console.log(`Socket Server Started `)
 		this.#socket.on('connection', (socket) => {
 			const clientsCount = this.#socket.engine.clientsCount;
-			socket.emit('authenticated',`server-${clientsCount} connected`)
-			socket.emit('ipaddress',`getipaddress`)
-			console.log(`server-${clientsCount} connected`);
+			socket.emit('authenticated', `server-${clientsCount} Id ${socket.id} connected`)
+			socket.emit('ipaddress', `getipaddress`)
+			console.log(`server-${clientsCount} Id ${socket.id} connected`);
 			this.#clients.push({
 				name: `server-${clientsCount}`,
 				id: socket.id
@@ -68,11 +68,16 @@ class Socket {
 	}
 	response(req, res) {
 		req.body._id = bcrypt.hashSync(`${Math.random()}`, 8)
-		this.#socket.to(this.#clients[0]?.id).emit(`${req.path.replace('/', '')}`, req.body)
+		//const isNull = ['server'].filter(x => req.body[x]);
+		let server = this.#clients[0]?.id;
+		//if (!isNull.length)
+		//	server = this.#clients.find(x => x.name === req.body.server)?.id;
+
+		this.#socket.to(server).emit(`${req.path.replace('/', '')}`, req.body)
 		setTimeout(() => {
 			const response = this.clientResponse.get(req.body._id);
 			if (!response)
-				return res.status(500).json({status:500, message: 'Internal Server Error' })
+				return res.status(500).json({ status: 500, message: 'Internal Server Error' })
 			this.clientResponse.delete(req.body._id)
 			return res.status(response.status)
 				.json({

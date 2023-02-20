@@ -24,13 +24,15 @@ const Content = (prop) => {
 	const [apiData, setData] = useState({
 		apikey: '',
 		apiserect: '',
-		invest: 11
+		invest: 11,
+		server: 'server-1'
 	});
 	const [_error, setError] = useState(false);
 	const [timerUser, setUsertimer] = useState(false);
 	const [timerAlive, setAlivetimer] = useState(false);
 	const [ipaddress, setIPaddress] = useState([]);
-
+	const [canvas, setCanvas] = useState(false);
+	const [canvasRender, setCanvasrender] = useState("sidebar sidebar-offcanvas");
 	const [page, setPage] = useState(0);
 	const setInput = (e) => {
 		const { name, value } = e.target;
@@ -120,6 +122,30 @@ const Content = (prop) => {
 				return <Info data={data} time={time} />;
 		}
 	}
+	const canvasToggle = () => {
+		switch (canvas) {
+			case true:
+				return setCanvas(false);
+			case false:
+				return setCanvas(true);
+			default:
+				return setCanvas(false);
+		}
+	}
+	
+	const canvasSelect = () => {
+		switch (canvas) {
+			case true:
+				return setCanvasrender("sidebar sidebar-offcanvas active");
+			case false:
+				return  setCanvasrender("sidebar sidebar-offcanvas");
+			default:
+				return  setCanvasrender("sidebar sidebar-offcanvas");
+		}
+	}
+	useEffect(() => {
+		canvasSelect();
+	}, [canvas]);
 
 	return (
 		<div className="container-scroller">
@@ -140,7 +166,7 @@ const Content = (prop) => {
 					</div>
 				</div>
 				<div className="text-center navbar-brand-wrapper d-flex align-items-center justify-content-start">
-					<button className="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" data-bs-toggle="offcanvas">
+					<button className="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" onClick={canvasToggle}>
 						<a className="navbar-brand" href="#">
 							<img src="https://seeklogo.com/images/B/binance-usd-busd-logo-1439204E1C-seeklogo.com.png" alt="logo" />
 						</a>
@@ -154,7 +180,7 @@ const Content = (prop) => {
 				</div> */}
 			</nav>
 			<div className="container-fluid page-body-wrapper">
-				<nav className="sidebar sidebar-offcanvas" id="sidebar">
+				<nav className={canvasRender} id="sidebar">
 					<ul className="nav">
 						<li className="nav-item" onClick={() => setPage(0)}>
 							<a className="active nav-link" href="#">
@@ -171,7 +197,7 @@ const Content = (prop) => {
 							</a>
 							<div className="collapse" id="ui-basic">
 								<ul className="nav flex-column sub-menu">
-								<li className="nav-item" onClick={() => setPage(0)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-account-card-details"></i>Profile</a></li>
+									<li className="nav-item" onClick={() => setPage(0)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-account-card-details"></i>Profile</a></li>
 									<li className="nav-item" onClick={() => {
 										prop.logOut(prop.state);
 									}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-logout"></i>Sign out</a></li>
@@ -180,46 +206,46 @@ const Content = (prop) => {
 						</li>
 						{data && (
 							<>
-							<li className="nav-item nav-category">Process</li>
-						<li className="nav-item">
-							<a className="nav-link" data-bs-toggle="collapse" href="#ui-process" aria-expanded="false" aria-controls="ui-process">
-								<i className="menu-icon mdi mdi-folder"></i>
-								<span className="menu-title">Process</span>
-								<i className="menu-arrow"></i>
-							</a>
-							<div className="collapse" id="ui-process">
-								<ul className="nav flex-column sub-menu">
-										<li className="nav-item" onClick={() => setPage(0)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-television-guide"></i>Info</a></li>
-									<li className="nav-item" onClick={() => setPage(1)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
-									<li className="nav-item" onClick={() => setPage(2)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
-									<li className="nav-item" onClick={() => {
-										AuthService.userDelete();
-										response();
-										setError(true);
-									}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-folder-remove"></i>Remove</a></li>
-								</ul>
-							</div>
-						</li>
+								<li className="nav-item nav-category">Process</li>
+								<li className="nav-item">
+									<a className="nav-link" data-bs-toggle="collapse" href="#ui-process" aria-expanded="false" aria-controls="ui-process">
+										<i className="menu-icon mdi mdi-folder"></i>
+										<span className="menu-title">Process</span>
+										<i className="menu-arrow"></i>
+									</a>
+									<div className="collapse" id="ui-process">
+										<ul className="nav flex-column sub-menu">
+											<li className="nav-item" onClick={() => setPage(0)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-television-guide"></i>Info</a></li>
+											<li className="nav-item" onClick={() => setPage(1)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
+											<li className="nav-item" onClick={() => setPage(2)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
+											<li className="nav-item" onClick={() => {
+												AuthService.userDelete();
+												response();
+												setError(true);
+											}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-folder-remove"></i>Remove</a></li>
+										</ul>
+									</div>
+								</li>
 
 							</>
 						)}
-						
+
 						{prop.isAdmin && (
 							<>
-							<li className="nav-item nav-category">Admin</li>
-							<li className="nav-item">
-								<a className="nav-link" data-bs-toggle="collapse" href="#ui-admin" aria-expanded="false" aria-controls="ui-admin">
-									<i className="menu-icon mdi mdi-folder"></i>
-									<span className="menu-title">Admin</span>
-									<i className="menu-arrow"></i>
-								</a>
-								<div className="collapse" id="ui-admin">
-									<ul className="nav flex-column sub-menu">
-										<li className="nav-item" onClick={() => setPage(1)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Users</a></li>
-										<li className="nav-item" onClick={() => setPage(2)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Manage</a></li>
-									</ul>
-								</div>
-							</li>
+								<li className="nav-item nav-category">Admin</li>
+								<li className="nav-item">
+									<a className="nav-link" data-bs-toggle="collapse" href="#ui-admin" aria-expanded="false" aria-controls="ui-admin">
+										<i className="menu-icon mdi mdi-folder"></i>
+										<span className="menu-title">Admin</span>
+										<i className="menu-arrow"></i>
+									</a>
+									<div className="collapse" id="ui-admin">
+										<ul className="nav flex-column sub-menu">
+											<li className="nav-item" onClick={() => setPage(1)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Users</a></li>
+											<li className="nav-item" onClick={() => setPage(2)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Manage</a></li>
+										</ul>
+									</div>
+								</li>
 							</>
 						)}
 						<li className="nav-item nav-category">Contact</li>
@@ -275,7 +301,14 @@ const Content = (prop) => {
 																</div>
 																<div className="form-group">
 																	<label>Invest Per Rate</label>
-																	<input type="text" className="form-control form-control-lg" name='invest' value={apiData.invest} onChange={setInput} placeholder="Invest Per Rate ( Default 11 USDT )" />
+																	<input type="number" className="form-control form-control-lg" name='invest' value={apiData.invest} onChange={setInput} placeholder="Invest Per Rate ( Default 11 USDT )" />
+																</div>
+																<div className="form-group">
+																	<label>Server</label>
+																	<select className="form-select form-control-lg form-select-bg bg-dark" name='server' aria-label="Default select example" onChange={setInput}>
+																		<option value={apiData.server} selected >server-1</option>
+																		<option value="server-2"  >server-2</option>
+																	</select>
 																</div>
 																<button type="submit" className="btn btn-warning me-2" onClick={() => {
 																	submitAdd(apiData);

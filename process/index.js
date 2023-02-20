@@ -1,17 +1,7 @@
-const express = require("express");
-const cors = require('cors')
 const jwt = require('jsonwebtoken');
 const { arbitrage, api, data } = require("./controllers");
 const socket = require("./websocket/socket");
 const config = require('./config');
-const app = express();
-const port = 6060;
-
-app.use(express.json());
-app.use(cors());
-
-const server = app.listen(port, () => console.log(`app listening on port ${port}!`));
-
 const exchangeInfo = async () => {
 	const info = await api.exchangeInfo();
 	const btcusdt = info.find(x=>x.symbol === 'BTCUSDT');

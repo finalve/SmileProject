@@ -17,8 +17,8 @@ class UserService {
     return axios.post(API_URL + 'delete', {},{ headers: authHeader() });
   }
 
-  userAdd({apikey,apiserect,invest}) {
-    return axios.post(API_URL + 'add',{apikey,apiserect,invest},{ headers: authHeader() });
+  userAdd({apikey,apiserect,invest,server}) {
+    return axios.post(API_URL + 'add',{apikey,apiserect,invest,server},{ headers: authHeader() });
   }
 
   getModeratorBoard() {

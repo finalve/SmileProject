@@ -253,13 +253,13 @@ class Worker {
 			this.success.shift();
 		this.success.push(message);
 	}
-	#pushSuccess(msg) {
+	#pushError(msg) {
 		let d = new Date();
 		let n = d.toLocaleTimeString();
 		let message = `${n} ${msg}`
 		if (this.success > 100)
 			this.success.shift();
-		this.success.push(message);
+		this.error.push(message);
 	}
 	#report() {
 		const _this = this;

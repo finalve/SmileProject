@@ -3,7 +3,7 @@ export default function Info({ data,time }) {
 	return (<>
 		<h4 className="card-title mb-0"><i className="enu-icon mdi mdi-label me-2"></i>{data.label}<small className="card-description" style={{ marginLeft: "5px" }}>
 			{data.status ?
-				<span className="text-success">TRUE</span>
+				<span className="text-success">Available</span>
 				:
 				<span className="text-danger">{data.error}</span>
 			}
