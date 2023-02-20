@@ -259,7 +259,7 @@ class Worker {
 		let message = `${n} ${msg}`
 		if (this.success > 100)
 			this.success.shift();
-		this.error.push(message);
+		this.catchmessage.push(message);
 	}
 	#report() {
 		const _this = this;
