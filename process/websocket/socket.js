@@ -5,6 +5,7 @@ const config = require('../config');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const BASE = '103.252.119.56';
+//const BASE = '192.168.1.9';
 const API_URL = `http://${BASE}/api/`;
 class Socket {
 	#socket;

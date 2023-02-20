@@ -87,5 +87,21 @@ class Socket {
 				});
 		}, 750);
 	}
+	getUsers(req, res) {
+		req.body._id = bcrypt.hashSync(`${Math.random()}`, 8)
+		this.#socket.emit(`${req.path.replace('/', '')}`, req.body)
+		setTimeout(() => {
+			const response = this.clientResponse.get(req.body._id);
+			if (!response)
+				return res.status(500).json({ status: 500, message: 'Internal Server Error' })
+			this.clientResponse.delete(req.body._id)
+			return res.status(response.status)
+				.json({
+					status: response?.status,
+					message: response?.message,
+					data: response?.data
+				});
+		}, 750);
+	}
 }
 module.exports = { Socket };

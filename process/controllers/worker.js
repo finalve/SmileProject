@@ -357,10 +357,10 @@ class Worker {
 	async #myWallet() {
 		try {
 			const response = await this.#client.userAsset();
-			const stable = response.data.find(x => x.asset === 'USDT');
+			const stable = response.data.find(x => x.asset === 'USDT') ;
 			const bnb = response.data.find(x => x.asset === 'BNB');
-			this.Invesment = parseFloat(stable.free);
-			this.BNB = parseFloat(bnb.free);
+			this.Invesment = parseFloat(stable?.free ? stable.free : 0);
+			this.BNB = parseFloat(bnb?.free ? bnb.free : 0);
 			this.#log(`balance of ${this.Invesment} USDT`)
 			this.#log(`balance of ${this.BNB} BNB`)
 			return response.data

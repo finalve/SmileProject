@@ -155,6 +155,10 @@ const Content = (prop) => {
 		canvasSelect();
 	}, [canvas]);
 	
+	const menuToggle = (page) =>{
+		canvasToggle();
+		setPage(page);
+	}
 	return (
 		<div className="container-scroller">
 			<nav className="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex align-items-top flex-row">
@@ -205,10 +209,8 @@ const Content = (prop) => {
 							</a>
 							<div className="collapse" id="ui-basic">
 								<ul className="nav flex-column sub-menu">
-									<li className="nav-item" onClick={() => setPage(0)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-account-card-details"></i>Profile</a></li>
-									<li className="nav-item" onClick={() => {
-										prop.logOut(prop.state);
-									}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-logout"></i>Sign out</a></li>
+									<li className="nav-item" onClick={() => {menuToggle(0);}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-account-card-details"></i>Profile</a></li>
+									<li className="nav-item" onClick={() => prop.logOut(prop.state)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-logout"></i>Sign out</a></li>
 								</ul>
 							</div>
 						</li>
@@ -223,10 +225,10 @@ const Content = (prop) => {
 									</a>
 									<div className="collapse" id="ui-process">
 										<ul className="nav flex-column sub-menu">
-											<li className="nav-item" onClick={() => setPage(0)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-television-guide"></i>Info</a></li>
-											<li className="nav-item" onClick={() => setPage(1)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
-											<li className="nav-item" onClick={() => setPage(2)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
-											<li className="nav-item" onClick={() => setPage(3)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-folder-remove"></i>Remove</a></li>
+											<li className="nav-item" onClick={() =>{menuToggle(0);} }> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-television-guide"></i>Info</a></li>
+											<li className="nav-item" onClick={() => {menuToggle(1);}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
+											<li className="nav-item" onClick={() => {menuToggle(2);}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
+											<li className="nav-item" onClick={() => {menuToggle(3);}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-folder-remove"></i>Remove</a></li>
 										</ul>
 									</div>
 								</li>
@@ -245,8 +247,8 @@ const Content = (prop) => {
 									</a>
 									<div className="collapse" id="ui-admin">
 										<ul className="nav flex-column sub-menu">
-											<li className="nav-item" onClick={() => setPage(1)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Users</a></li>
-											<li className="nav-item" onClick={() => setPage(2)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Manage</a></li>
+											<li className="nav-item" onClick={() => menuToggle(1)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Users</a></li>
+											<li className="nav-item" onClick={() => menuToggle(2)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Manage</a></li>
 										</ul>
 									</div>
 								</li>
