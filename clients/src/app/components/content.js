@@ -3,6 +3,7 @@ import AuthService from "../services/user.service";
 import Info from "./page/info";
 import Messages from "./page/messages";
 import Tables from "./page/tables";
+import Remove from "./page/remove";
 const submitAdd = (apiData) => {
 	AuthService.userAdd(apiData).then((res) => {
 		window.location.reload()
@@ -110,14 +111,21 @@ const Content = (prop) => {
 		}
 	}, [data]);
 
+	const remove = () => {
+		AuthService.userDelete();
+		response();
+		setError(true);
+	}
 	const renderState = () => {
 		switch (page) {
 			case 0:
 				return <Info data={data} time={time} />;
 			case 1:
-				return <Messages data={data} />;
-			case 2:
 				return <Tables data={data} />;
+			case 2:
+				return <Messages data={data} />;
+			case 3:
+				return <Remove remove={remove} cancel={setPage}/>;
 			default:
 				return <Info data={data} time={time} />;
 		}
@@ -132,21 +140,21 @@ const Content = (prop) => {
 				return setCanvas(false);
 		}
 	}
-	
+
 	const canvasSelect = () => {
 		switch (canvas) {
 			case true:
 				return setCanvasrender("sidebar sidebar-offcanvas active");
 			case false:
-				return  setCanvasrender("sidebar sidebar-offcanvas");
+				return setCanvasrender("sidebar sidebar-offcanvas");
 			default:
-				return  setCanvasrender("sidebar sidebar-offcanvas");
+				return setCanvasrender("sidebar sidebar-offcanvas");
 		}
 	}
 	useEffect(() => {
 		canvasSelect();
 	}, [canvas]);
-
+	
 	return (
 		<div className="container-scroller">
 			<nav className="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex align-items-top flex-row">
@@ -216,13 +224,9 @@ const Content = (prop) => {
 									<div className="collapse" id="ui-process">
 										<ul className="nav flex-column sub-menu">
 											<li className="nav-item" onClick={() => setPage(0)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-television-guide"></i>Info</a></li>
-											<li className="nav-item" onClick={() => setPage(1)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
-											<li className="nav-item" onClick={() => setPage(2)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
-											<li className="nav-item" onClick={() => {
-												AuthService.userDelete();
-												response();
-												setError(true);
-											}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-folder-remove"></i>Remove</a></li>
+											<li className="nav-item" onClick={() => setPage(1)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
+											<li className="nav-item" onClick={() => setPage(2)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
+											<li className="nav-item" onClick={() => setPage(3)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-folder-remove"></i>Remove</a></li>
 										</ul>
 									</div>
 								</li>
