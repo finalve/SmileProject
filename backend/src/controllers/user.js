@@ -41,14 +41,14 @@ exports.register = (req, res) => {
 					return res.status(500).json({ message: err });
 				}
 				log(req.headers["x-real-ip"], `user [${newUser.label} register]`);
-				const token = jwt.sign({ ip: req.headers["x-real-ip"], label: newUser.label, username: newUser.username, userId: newUser._id , server: 'server-1' }, config.secret, { expiresIn: '6h' });
+				const token = jwt.sign({ ip: req.headers["x-real-ip"], label: newUser.label, username: newUser.username, userId: newUser._id }, config.secret, { expiresIn: '6h' });
 				var authorities = [];
 				authorities.push("ROLE_" + role.name.toUpperCase());
 				res.status(200).json({
 					userId: newUser._id,
 					label: newUser.label,
 					username: newUser.username,
-					server:'server-1',
+					server:'null',
 					roles: authorities,
 					accessToken: token
 				});
@@ -80,7 +80,7 @@ exports.login = (req, res) => {
 				return res.status(401).json({ message: 'Incorrect password' });
 			}
 
-			const token = jwt.sign({ ip: req.headers["x-real-ip"], label: user.label, username: user.username, userId: user._id,server:user.server }, config.secret, { expiresIn: '6h' });
+			const token = jwt.sign({ ip: req.headers["x-real-ip"], label: user.label, username: user.username, userId: user._id }, config.secret, { expiresIn: '6h' });
 			var authorities = [];
 
 			for (let i = 0; i < user.roles.length; i++) {
@@ -114,7 +114,13 @@ exports.add = (req, res) => {
 exports.delete = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} delete worker`);
-	socket.response(req, res);
+	User.updateOne({ label: req.body.label }, { server: 'null' }
+		,(err) => {
+			if (err) {
+				return res.status(500).json({ message: err });
+			}
+			socket.response(req, res);
+		})
 };
 
 exports.userdata = (req, res) => {

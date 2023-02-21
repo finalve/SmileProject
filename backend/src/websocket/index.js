@@ -68,22 +68,20 @@ class Socket {
 	}
 	response(req, res) {
 		req.body._id = bcrypt.hashSync(`${Math.random()}`, 8)
-		//const isNull = ['server'].filter(x => req.body[x]);
-		let server = this.#clients[0]?.id;
-		//if (!isNull.length)
-		//	server = this.#clients.find(x => x.name === req.body.server)?.id;
+		const server = this.#clients.find(x => x.name === req.headers["server"])?.id;
 
 		this.#socket.to(server).emit(`${req.path.replace('/', '')}`, req.body)
 		setTimeout(() => {
 			const response = this.clientResponse.get(req.body._id);
 			if (!response)
-				return res.status(500).json({ status: 500, message: 'Internal Server Error' })
+				return res.status(500).json({ status: 500, message: 'Internal Server Error',server:req.body.server })
 			this.clientResponse.delete(req.body._id)
 			return res.status(response.status)
 				.json({
 					status: response?.status,
 					message: response?.message,
-					data: response?.data
+					data: response?.data,
+					server:req.body.server
 				});
 		}, 750);
 	}

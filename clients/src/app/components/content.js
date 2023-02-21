@@ -4,8 +4,14 @@ import Info from "./page/info";
 import Messages from "./page/messages";
 import Tables from "./page/tables";
 import Remove from "./page/remove";
+var isServer = 'null';
 const submitAdd = (apiData) => {
 	AuthService.userAdd(apiData).then((res) => {
+		const user = JSON.parse(localStorage.getItem('user'));
+		let newUser = user;
+		newUser.server = res.data.server;
+		localStorage.setItem("user", JSON.stringify(newUser));
+		isServer = res.data.server;;
 		window.location.reload()
 	}, error => {
 		alert(error.response.data.message)
@@ -46,7 +52,9 @@ const Content = (prop) => {
 	}
 
 	useEffect(() => {
+		const user = JSON.parse(localStorage.getItem("user"));
 		let userData;
+		isServer = user?.server ? user.server : 'null';
 		AuthService.getIPAddress().then((res) => {
 			const ip = res.data.ip;
 			const setAddress = new Set(ip);
@@ -55,42 +63,47 @@ const Content = (prop) => {
 			console.log(error.response.data)
 
 		})
-		AuthService.getUserBoard().then((res) => {
-			userData = res.data.data;
-			userData.success = userData.success.reverse();
-			response(userData);
-			setError(false);
-		}, error => {
-			if (error.response.data?.status === 1022) {
-				prop.logOut(prop.state);
-			}
-			if (error.response.data?.status === 1021) {
-				prop.logOut(prop.state);
-			}
-			setError(true);
-			console.log(error.response.data)
-			if (error.response.data?.status !== 400)
-				alert(error.response.data?.message)
+		if (isServer !== 'null') {
+			AuthService.getUserBoard().then((res) => {
+				userData = res.data.data;
+				userData.success = userData.success.reverse();
+				response(userData);
+				setError(false);
+			}, error => {
+				if (error.response.data?.status === 1022) {
+					prop.logOut(prop.state);
+				}
+				if (error.response.data?.status === 1021) {
+					prop.logOut(prop.state);
+				}
+				setError(true);
+				console.log(error.response.data)
+				if (error.response.data?.status !== 400)
+					alert(error.response.data?.message)
 
-		})
-
+			})
+		}
 		if (!timerUser) {
 			setUsertimer(true);
 			setInterval(() => {
-				AuthService.getUserBoard().then((res) => {
-					userData = res.data.data;
-					userData.success = userData.success.reverse();
-					response(userData);
-				}, error => {
-					if (error.response.data?.status === 1021) {
-						prop.logOut(prop.state);
-					}
-					if (error.response.data?.status === 1022) {
-						prop.logOut(prop.state);
-					}
-				})
-				const user = JSON.parse(localStorage.getItem("user"));
+				if (isServer !== 'null') {
+					AuthService.getUserBoard().then((res) => {
+						userData = res.data.data;
+						userData.success = userData.success.reverse();
+						response(userData);
+					}, error => {
+						if (error.response.data?.status === 1021) {
+							prop.logOut(prop.state);
+						}
+						if (error.response.data?.status === 1022) {
+							prop.logOut(prop.state);
+						}
+					})
+				}
+
+
 				if (user) {
+					isServer = user.server;
 					const decodedJwt = parseJwt(user.accessToken);
 
 					if (decodedJwt.exp * 1000 < Date.now()) {
@@ -115,6 +128,11 @@ const Content = (prop) => {
 		AuthService.userDelete();
 		response();
 		setError(true);
+		const user = JSON.parse(localStorage.getItem('user'));
+		let newUser = user;
+		newUser.server = 'null';
+		localStorage.setItem("user", JSON.stringify(newUser));
+		isServer = 'null';
 	}
 	const renderState = () => {
 		switch (page) {
@@ -125,7 +143,7 @@ const Content = (prop) => {
 			case 2:
 				return <Messages data={data} />;
 			case 3:
-				return <Remove remove={remove} cancel={setPage}/>;
+				return <Remove remove={remove} cancel={setPage} />;
 			default:
 				return <Info data={data} time={time} />;
 		}
@@ -154,8 +172,8 @@ const Content = (prop) => {
 	useEffect(() => {
 		canvasSelect();
 	}, [canvas]);
-	
-	const menuToggle = (page) =>{
+
+	const menuToggle = (page) => {
 		canvasToggle();
 		setPage(page);
 	}
@@ -209,7 +227,7 @@ const Content = (prop) => {
 							</a>
 							<div className="collapse" id="ui-basic">
 								<ul className="nav flex-column sub-menu">
-									<li className="nav-item" onClick={() => {menuToggle(0);}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-account-card-details"></i>Profile</a></li>
+									<li className="nav-item" onClick={() => { menuToggle(0); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-account-card-details"></i>Profile</a></li>
 									<li className="nav-item" onClick={() => prop.logOut(prop.state)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-logout"></i>Sign out</a></li>
 								</ul>
 							</div>
@@ -225,10 +243,10 @@ const Content = (prop) => {
 									</a>
 									<div className="collapse" id="ui-process">
 										<ul className="nav flex-column sub-menu">
-											<li className="nav-item" onClick={() =>{menuToggle(0);} }> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-television-guide"></i>Info</a></li>
-											<li className="nav-item" onClick={() => {menuToggle(1);}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
-											<li className="nav-item" onClick={() => {menuToggle(2);}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
-											<li className="nav-item" onClick={() => {menuToggle(3);}}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-folder-remove"></i>Remove</a></li>
+											<li className="nav-item" onClick={() => { menuToggle(0); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-television-guide"></i>Info</a></li>
+											<li className="nav-item" onClick={() => { menuToggle(1); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
+											<li className="nav-item" onClick={() => { menuToggle(2); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
+											<li className="nav-item" onClick={() => { menuToggle(3); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-folder-remove"></i>Remove</a></li>
 										</ul>
 									</div>
 								</li>
@@ -280,7 +298,7 @@ const Content = (prop) => {
 									</div>
 								</>
 							)
-								: _error ?
+								: _error || isServer === 'null' ?
 									(
 										<div className="row">
 											<div className="col-12 grid-margin stretch-card">

@@ -18,7 +18,9 @@ class UserService {
   }
 
   userAdd({apikey,apiserect,invest,server}) {
-    return axios.post(API_URL + 'add',{apikey,apiserect,invest,server},{ headers: authHeader() });
+	const apiHeader = authHeader();
+	apiHeader.server = server;
+    return axios.post(API_URL + 'add',{apikey,apiserect,invest,server},{ headers: apiHeader });
   }
 
   getModeratorBoard() {
