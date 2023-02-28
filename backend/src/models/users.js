@@ -3,11 +3,9 @@ const mongoose = require("mongoose");
 const User = mongoose.model(
   "User",
   new mongoose.Schema({
-	label: String,
+    label: String,
     username: String,
     password: String,
-	apikey: String,
-	server: String,
     roles: [
       {
         type: mongoose.Schema.Types.ObjectId,

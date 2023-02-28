@@ -30,9 +30,7 @@ verifyToken = (req, res, next) => {
 		if (err) {
 			return res.status(401).send({ message: "Unauthorized!" });
 		}
-		if (decoded.ip !== req.headers["x-real-ip"]) return res.status(400).json({status: 1021, message: "Can't Cross IP Address!" });
 		req.body.label = decoded.label;
-		req.server = decoded.server;
 		req.userId = decoded.userId;
 		next();
 	});

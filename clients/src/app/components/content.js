@@ -4,19 +4,11 @@ import Info from "./page/info";
 import Messages from "./page/messages";
 import Tables from "./page/tables";
 import Remove from "./page/remove";
-var isServer = 'null';
-const submitAdd = (apiData) => {
-	AuthService.userAdd(apiData).then((res) => {
-		const user = JSON.parse(localStorage.getItem('user'));
-		let newUser = user;
-		newUser.server = res.data.server;
-		localStorage.setItem("user", JSON.stringify(newUser));
-		isServer = res.data.server;;
-		window.location.reload()
-	}, error => {
-		alert(error.response.data.message)
-	})
-}
+import Errors from "./page/error";
+import Addworker from "./page/addworker";
+import GetAll from "./admin/getall";
+
+import Loading from "./loading";
 const parseJwt = (token) => {
 	try {
 		return JSON.parse(atob(token.split('.')[1]));
@@ -25,6 +17,12 @@ const parseJwt = (token) => {
 	}
 };
 const Content = (prop) => {
+	const [init, setInit] = useState(false);
+	if(!init){
+		setInit(true)
+		console.log(init)
+	}
+	
 
 	const [data, response] = useState();
 	const [time, setTime] = useState(null);
@@ -32,7 +30,7 @@ const Content = (prop) => {
 		apikey: '',
 		apiserect: '',
 		invest: 11,
-		server: 'server-1'
+		server: ''
 	});
 	const [_error, setError] = useState(false);
 	const [timerUser, setUsertimer] = useState(false);
@@ -41,6 +39,8 @@ const Content = (prop) => {
 	const [canvas, setCanvas] = useState(false);
 	const [canvasRender, setCanvasrender] = useState("sidebar sidebar-offcanvas");
 	const [page, setPage] = useState(0);
+	const [isServer, setServers] = useState();
+	const [myServer, setMyServer] = useState();
 	const setInput = (e) => {
 		const { name, value } = e.target;
 		setData((prev) => {
@@ -54,7 +54,15 @@ const Content = (prop) => {
 	useEffect(() => {
 		const user = JSON.parse(localStorage.getItem("user"));
 		let userData;
-		isServer = user?.server ? user.server : 'null';
+		let allServer;
+		AuthService.allserver().then((res) => {
+			allServer = res.data.servers;
+			setServers(allServer);
+		}, error => {
+			console.log(error.response.data)
+
+		})
+
 		AuthService.getIPAddress().then((res) => {
 			const ip = res.data.ip;
 			const setAddress = new Set(ip);
@@ -63,47 +71,60 @@ const Content = (prop) => {
 			console.log(error.response.data)
 
 		})
-		if (isServer !== 'null') {
-			AuthService.getUserBoard().then((res) => {
-				userData = res.data.data;
-				userData.success = userData.success.reverse();
-				response(userData);
-				setError(false);
-			}, error => {
-				if (error.response.data?.status === 1022) {
-					prop.logOut(prop.state);
-				}
-				if (error.response.data?.status === 1021) {
-					prop.logOut(prop.state);
-				}
-				setError(true);
-				console.log(error.response.data)
-				if (error.response.data?.status !== 400)
-					alert(error.response.data?.message)
 
-			})
-		}
+		AuthService.myserver().then((res) => {
+			if (res.data.server.includes('server')) {
+				setMyServer(res.data.server);
+				AuthService.getUserBoard().then((res) => {
+					userData = res.data.data;
+					userData.success = userData.success.reverse();
+					response(userData);
+					setError(false);
+				}, error => {
+					if (error.response.data?.status === 1022) {
+						prop.logOut(prop.state);
+					}
+					if (error.response.data?.status === 1021) {
+						prop.logOut(prop.state);
+					}
+					setError(true);
+					console.log(error.response.data)
+					if (error.response.data?.status !== 400)
+						alert(error.response.data?.message)
+				})
+			} else {
+				setError(true);
+			}
+		}, error => {
+			if (error.response.data?.status === 1022) {
+				prop.logOut(prop.state);
+			}
+			if (error.response.data?.status === 1021) {
+				prop.logOut(prop.state);
+			}
+			setError(true);
+			alert(error.response.data.message)
+		})
+
 		if (!timerUser) {
 			setUsertimer(true);
 			setInterval(() => {
-				if (isServer !== 'null') {
-					AuthService.getUserBoard().then((res) => {
-						userData = res.data.data;
-						userData.success = userData.success.reverse();
-						response(userData);
-					}, error => {
-						if (error.response.data?.status === 1021) {
-							prop.logOut(prop.state);
-						}
-						if (error.response.data?.status === 1022) {
-							prop.logOut(prop.state);
-						}
-					})
-				}
-
+				AuthService.getUserBoard().then((res) => {
+					userData = res.data.data;
+					userData.success = userData.success.reverse();
+					response(userData);
+				}, error => {
+					if (error.response.data?.status === 1021) {
+						prop.logOut(prop.state);
+					}
+					if (error.response.data?.status === 1022) {
+						prop.logOut(prop.state);
+					}
+					setError(true);
+					response();
+				})
 
 				if (user) {
-					isServer = user.server;
 					const decodedJwt = parseJwt(user.accessToken);
 
 					if (decodedJwt.exp * 1000 < Date.now()) {
@@ -124,15 +145,16 @@ const Content = (prop) => {
 		}
 	}, [data]);
 
+	const submitAdd = (apiData) => {
+		AuthService.userAdd(apiData).then((res) => {
+			console.log(res.data)
+		}, error => {
+			alert(error.response.data.message)
+		})
+	}
+
 	const remove = () => {
 		AuthService.userDelete();
-		response();
-		setError(true);
-		const user = JSON.parse(localStorage.getItem('user'));
-		let newUser = user;
-		newUser.server = 'null';
-		localStorage.setItem("user", JSON.stringify(newUser));
-		isServer = 'null';
 	}
 	const renderState = () => {
 		switch (page) {
@@ -143,7 +165,11 @@ const Content = (prop) => {
 			case 2:
 				return <Messages data={data} />;
 			case 3:
+				return <Errors data={data} />;
+			case 4:
 				return <Remove remove={remove} cancel={setPage} />;
+			case 10:
+				return <GetAll servers={isServer} />
 			default:
 				return <Info data={data} time={time} />;
 		}
@@ -246,7 +272,8 @@ const Content = (prop) => {
 											<li className="nav-item" onClick={() => { menuToggle(0); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-television-guide"></i>Info</a></li>
 											<li className="nav-item" onClick={() => { menuToggle(1); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
 											<li className="nav-item" onClick={() => { menuToggle(2); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
-											<li className="nav-item" onClick={() => { menuToggle(3); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-folder-remove"></i>Remove</a></li>
+											<li className="nav-item" onClick={() => { menuToggle(3); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-alert-circle"></i>Error</a></li>
+											<li className="nav-item" onClick={() => { menuToggle(4); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-folder-remove"></i>Remove</a></li>
 										</ul>
 									</div>
 								</li>
@@ -265,7 +292,7 @@ const Content = (prop) => {
 									</a>
 									<div className="collapse" id="ui-admin">
 										<ul className="nav flex-column sub-menu">
-											<li className="nav-item" onClick={() => menuToggle(1)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Users</a></li>
+											<li className="nav-item" onClick={() => menuToggle(10)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Users</a></li>
 											<li className="nav-item" onClick={() => menuToggle(2)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Manage</a></li>
 										</ul>
 									</div>
@@ -298,61 +325,10 @@ const Content = (prop) => {
 									</div>
 								</>
 							)
-								: _error || isServer === 'null' ?
-									(
-										<div className="row">
-											<div className="col-12 grid-margin stretch-card">
-												<div className="col-md-6">
-													<div className="card">
-														<div className="card-body" onKeyDown={event => {
-															if (event.key === 'Enter') {
-																submitAdd(apiData)
-															}
-														}}>
-															<h4 className="card-title mb-0"><i className="menu-icon mdi mdi-lock me-2"></i>ไม่พบ API-KEY ของคุณ !<small className="card-description" style={{ marginLeft: "5px" }}>กรุณาเพิ่ม API-KEY Binance ก่อนใช้งาน</small></h4>
-															<hr></hr>
-															<div className="forms mt-3">
-																<div className="form-group">
-																	<label>API KEY</label>
-																	<input type="text" className="form-control form-control-lg" name='apikey' value={apiData.apikey} onChange={setInput} placeholder="API KEY" required />
-																</div>
-																<div className="form-group">
-																	<label>API SERECT</label>
-																	<input type="text" className="form-control form-control-lg" name='apiserect' value={apiData.apiserect} onChange={setInput} placeholder="API SERECT" required />
-																	<div className="alert alert-dark mb-4 mt-3" role="alert">
-																		<i className="mdi mdi-pin me-1"></i>
-																		Add IP Address to Binance API Management ** <span className="text-warning">{ipaddress}</span></div>
-																</div>
-																<div className="form-group">
-																	<label>Invest Per Rate</label>
-																	<input type="number" className="form-control form-control-lg" name='invest' value={apiData.invest} onChange={setInput} placeholder="Invest Per Rate ( Default 11 USDT )" />
-																</div>
-																<div className="form-group">
-																	<label>Server</label>
-																	<select className="form-select form-control-lg form-select-bg bg-dark" name='server' aria-label="Default select example" onChange={setInput}>
-																		<option value={apiData.server} selected >server-1</option>
-																		<option value="server-2"  >server-2</option>
-																	</select>
-																</div>
-																<button type="submit" className="btn btn-warning me-2" onClick={() => {
-																	submitAdd(apiData);
-																}}>Submit</button>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
-										</div>
-									)
+								: _error ?
+									<Addworker apiData={apiData} submitAdd={submitAdd} setInput={setInput} ipaddress={ipaddress} servers={isServer} />
 									:
-									(
-										<div className='d-flex justify-content-center align-items-center' style={{ height: "80%" }}>
-											<div className="spinner-border me-3" role="status">
-												<span className="sr-only"></span>
-											</div>
-											<span className="d-block">Loading ...</span>
-										</div>
-									)
+									<Loading />
 						}
 					</div>
 				</div>

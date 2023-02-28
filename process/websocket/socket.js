@@ -7,6 +7,7 @@ const axios = require('axios');
 const BASE = '103.252.119.56';
 //const BASE = '192.168.1.9';
 const API_URL = `http://${BASE}/api/`;
+
 class Socket {
 	#socket;
 	#ipaddress;
@@ -15,24 +16,58 @@ class Socket {
 			this.#ipaddress = response.data.ip;
 		});
 		const token = jwt.sign({ user: 'server-1' }, config.serect);
-		//this.#socket = socket.connect('http://localhost:8080', { path :'/socket', query: { token } });
 		this.#socket = socket.connect(`http://${BASE}/`, { path: '/socket', query: { token } });
-		this.#socket.on('authenticated', (res) => {
-			console.log(res);
+		this.#socket.on('authenticated', () => {
+			this.#socket.emit('authenticated', { servername: config.servername, ip: this.#ipaddress });
 		});
-		this.#socket.on('ipaddress', (req) => {
+		this.#socket.on('ipaddress', () => {
 			this.#socket.emit('ipaddress', { ip: this.#ipaddress });
 		})
-		this.#socket.on('add', (req) => {
-			if (Instance.worker.find((worker) => worker.apikey === req.apikey)) {
+
+		this.#socket.on('myserver', (req) => {
+			if (Instance.worker.find((worker) => worker.label === req.label)) {
+				return this.#socket.emit('myserver', {
+					status: 200,
+					id: req._id,
+					server: config.servername
+				});
+			}
+		})
+
+		this.#socket.on('arbitrage', (req) => {
+			if (req?.server !== config.servername)
+				return;
+			return this.#socket.emit('arbitrage', {
+				status: 200,
+				id: req._id,
+				data: Instance.arbitrage,
+				server:config.servername
+			});
+		})
+		this.#socket.on('exists', (req) => {
+			if (Instance.worker.find((worker) => worker.apikey === req.apikey || worker.label === req.label)) {
 				this.#socket.emit('add', {
 					status: 400,
 					id: req._id,
-					message: `KEY or Label already exists!`
+					message: `KEY or Label already exists!`,
+					server: config.servername
 				});
 				this.#log(`Worker ${req.label} IP::[${req._ip}] already exists!`);
-				return 
 			}
+		})
+		this.#socket.on('add', (req) => {
+			if (Instance.worker.find((worker) => worker.apikey === req.apikey || worker.label === req.label)) {
+				this.#socket.emit('add', {
+					status: 400,
+					id: req._id,
+					message: `KEY or Label already exists!`,
+					server: config.servername
+				});
+				this.#log(`Worker ${req.label} IP::[${req._ip}] already exists!`);
+				return
+			}
+			if (req?.server !== config.servername)
+				return;
 			if (isNaN(req.invest)) {
 				this.#socket.emit('add', {
 					status: 400,
@@ -40,7 +75,7 @@ class Socket {
 					message: `invalid invest`
 				});
 				this.#log(`Worker ${req.label} IP::[${req._ip}] invalid invest!`);
-				return 
+				return
 			}
 
 			const newWorker = new Worker(req);
@@ -48,6 +83,7 @@ class Socket {
 			this.#socket.emit('add', {
 				status: 200,
 				id: req._id,
+				server: config.servername,
 				message: `${req.label} connect to server!`
 			})
 			this.#log(`Worker ${req.label} IP::[${req._ip}] connect to server!`);
@@ -57,16 +93,8 @@ class Socket {
 
 		this.#socket.on(('delete'), (req) => {
 			const foundWorker = Instance.worker.find((worker) => worker.label === req.label);
-			if (!foundWorker) {
-				this.#socket.emit('delete', {
-					status: 400,
-					id: req._id,
-					message: `User not found`
-				});
-				this.#log(`IP::[${req._ip}] User not found`);
-				return 
-			}
-
+			if (!foundWorker)
+				return
 			foundWorker.delete();
 			Instance.worker = Instance.worker.filter((worker) => worker.label !== req.label);
 			this.#socket.emit('delete', {
@@ -75,7 +103,7 @@ class Socket {
 				message: `Worker ${req.label} deleted successfully!`
 			});
 			this.#log(`Worker ${req.label} IP::[${req._ip}] deleted successfully! ${Instance.worker.length}`);
-			return 
+			return
 		});
 
 		this.#socket.on(('rmorder'), (req) => {
@@ -87,7 +115,7 @@ class Socket {
 					message: `User not found`
 				});
 				this.#log(`IP::[${req._ip}] User not found`);
-				return 
+				return
 			}
 
 			foundWorker.removeOrder(req.orderId);
@@ -97,7 +125,7 @@ class Socket {
 				message: `Worker ${req.label} Remove Order ${req.orderId} successfully!`
 			});
 			this.#log(`Worker ${req.label} Remove Order ${req.orderId} successfully! ${Instance.worker.length}`);
-			return 
+			return
 		});
 
 		this.#socket.on(('edit'), (req) => {
@@ -109,7 +137,7 @@ class Socket {
 					message: `User not found`
 				});
 				this.#log(`IP::[${req._ip}] User not found`);
-				return 
+				return
 			}
 
 			foundWorker.ipr = req.ipr;
@@ -125,6 +153,8 @@ class Socket {
 		});
 
 		this.#socket.on(('admindelete'), (req) => {
+			if (req?.server !== config.servername)
+				return;
 			const foundWorker = Instance.worker.find((worker) => worker.label === req.userlabel);
 			if (!foundWorker) {
 				this.#socket.emit('delete', {
@@ -133,7 +163,7 @@ class Socket {
 					message: `User not found`
 				});
 				this.#log(`IP::[${req._ip}] User not found`);
-				return 
+				return
 			}
 
 			foundWorker.delete();
@@ -143,8 +173,8 @@ class Socket {
 				id: req._id,
 				message: `Worker ${req.userlabel} deleted successfully!`
 			});
-			 this.#log(`Worker ${req.userlabel} IP::[${req._ip}] deleted successfully! ${Instance.worker.length}`);
-			 return
+			this.#log(`Worker ${req.userlabel} IP::[${req._ip}] deleted successfully! ${Instance.worker.length}`);
+			return
 		});
 
 		this.#socket.on(('adminrmorder'), (req) => {
@@ -156,7 +186,7 @@ class Socket {
 					message: `User not found`
 				});
 				this.#log(`IP::[${req._ip}] User not found`);
-				 return
+				return
 			}
 
 			foundWorker.removeOrder(req.orderId);
@@ -165,8 +195,8 @@ class Socket {
 				id: req._id,
 				message: `Worker ${req.userlabel} Remove Order ${req.orderId} successfully!`
 			});
-		 this.#log(`Worker ${req.userlabel} IP::[${req._ip}] Remove Order ${req.orderId} successfully! ${Instance.worker.length}`);
-		 return
+			this.#log(`Worker ${req.userlabel} IP::[${req._ip}] Remove Order ${req.orderId} successfully! ${Instance.worker.length}`);
+			return
 		});
 
 
@@ -197,11 +227,7 @@ class Socket {
 		this.#socket.on('userdata', (req) => {
 			const foundWorker = Instance.worker.find((worker) => worker.label === req.label);
 			if (!foundWorker)
-				return this.#socket.emit('userdata', {
-					status: 400,
-					id: req._id,
-					message: `User not found`
-				});
+				return
 
 			return this.#socket.emit('userdata', {
 				status: 200,
@@ -220,6 +246,7 @@ class Socket {
 					bnb: parseFloat(foundWorker.BNB).toFixed(8),
 					takeOrder: foundWorker.takeOrder,
 					success: foundWorker.success,
+					errorlogs: foundWorker.catchmessage,
 					orderOpen: foundWorker.openOrder
 
 				}
@@ -227,14 +254,8 @@ class Socket {
 		})
 
 		this.#socket.on('alluser', (req) => {
-			const foundWorker = Instance.worker.find((worker) => worker.label === req.label);
-			if (!foundWorker)
-				return this.#socket.emit('userdata', {
-					status: 400,
-					id: req._id,
-					message: `User not found`
-				});
-
+			if (req?.server !== config.servername)
+				return;
 			return this.#socket.emit('alluser', {
 				status: 200,
 				id: req._id,
@@ -248,7 +269,7 @@ class Socket {
 	#log(msg) {
 		var d = new Date();
 		var n = d.toLocaleTimeString();
-		let message = `${n} user:[SYSTEM]  message:[${msg}]`;
+		let message = `${n} user:[${config.servername}]  message:[${msg}]`;
 		console.log(message)
 	}
 }

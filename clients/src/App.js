@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AuthService from "./app/services/auth.service";
-import { Signin, Signup, Content, Dashboard } from './app/components';
+import { Signin, Signup, Content } from './app/components';
 import './App.css';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 const userDefault = {
 	showModeratorBoard: false,

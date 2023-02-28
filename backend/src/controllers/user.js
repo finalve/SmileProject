@@ -48,7 +48,6 @@ exports.register = (req, res) => {
 					userId: newUser._id,
 					label: newUser.label,
 					username: newUser.username,
-					server:'null',
 					roles: authorities,
 					accessToken: token
 				});
@@ -92,35 +91,28 @@ exports.login = (req, res) => {
 				userId: user._id,
 				label: user.label,
 				username: user.username,
-				server:user.server,
 				roles: authorities,
 				accessToken: token,
 			});
 		});
 };
 
+exports.myserver = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
+	log(req.headers["x-real-ip"], `user :: ${req.body.label} get my server`);
+	socket.myserver(req, res);
+};
+
 exports.add = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} add worker`);
-	User.updateOne({ label: req.body.label }, { server: req.body.server }
-		,(err) => {
-			if (err) {
-				return res.status(500).json({ message: err });
-			}
-			socket.response(req, res);
-		})
+	socket.exists(req, res);
 };
 
 exports.delete = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} delete worker`);
-	User.updateOne({ label: req.body.label }, { server: 'null' }
-		,(err) => {
-			if (err) {
-				return res.status(500).json({ message: err });
-			}
-			socket.response(req, res);
-		})
+	socket.response(req, res);
 };
 
 exports.userdata = (req, res) => {
@@ -179,9 +171,19 @@ exports.getserveraddress = (req, res) => {
 		ip: socket.ipaddress
 	});
 };
-// exports.arbitrage = (req, res) => {
-// 	socket.arbitrage(req,res);
-// };
+
+exports.getServerName = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
+	log(req.headers["x-real-ip"], `get server address`);
+	res.status(200).json({
+		servers: socket.server
+	});
+};
+ exports.arbitrage = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
+	log(req.headers["x-real-ip"], `get server address`);
+ 	socket.response(req,res);
+};
 
 
 

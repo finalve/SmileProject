@@ -1,7 +1,7 @@
 import axios from "axios";
 import { config } from "../config";
 import authHeader from './auth-header';
-const API_URL = `http://${config.base}/api/`;
+const API_URL = `https://${config.base}/api/`;
 class AuthService {
 	login({ username, password }) {
 		return axios

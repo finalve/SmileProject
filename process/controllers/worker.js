@@ -1,11 +1,13 @@
 const { Spot } = require('@binance/connector');
+const socket = require("socket.io-client");
 class Worker {
 	#client;
 	#wsRef;
 	#listenkey;
-	#started = false;
+	#socket;
 	#serect;
 	constructor({ label, apikey, apiserect, invest }) {
+		this.started = false;
 		this.label = label;
 		this.apikey = apikey;
 		this.#serect = apiserect;
@@ -24,10 +26,13 @@ class Worker {
 		this.history = [];
 		this.#loopCheck();
 		this.success = [];
+		this.catchmessage = [];
 		this.errorMessage = 'Wait Connecting to Server';
+		this.#socket = socket.connect(`http://localhost:8050/`);
+		this.#socket.on('hello', () => console.log('connected to logs server'))
 	}
 	async arbitrage({ data }, callback) {
-		if (this.#started)
+		if (this.started)
 			if (this.Invesment > this.ipr)
 				if (this.BNB > 0)
 					if (this.openOrder.length < this.orderLength) {
@@ -35,8 +40,6 @@ class Worker {
 							const userIPR = callback(this.ipr);
 							data.userIPR = userIPR;
 							const response = await this.#newOrder(data[1].symbol, 'BUY', userIPR.quantity, data[1].price)
-							if (!response.data)
-								return
 							this.openOrder.push({
 								data: data, response:
 								{
@@ -44,12 +47,36 @@ class Worker {
 									orderId: response.data.orderId,
 									status: response.data.status,
 									origQty: response.data.origQty,
-									step:1
+									step: 1
 								}
 							});
 						} catch (error) {
-							console.log(error)
-							this.#started = false;
+							console.log({
+								header: 'first order'
+								, msg: error?.response?.data?.msg
+							})
+							this.errorMessage = error.response.data?.msg;
+							this.started = false;
+							this.#pushError(
+								{
+									error: error.response?.data?.msg,
+									symbol: [
+										{
+											symbol: data[1].symbol,
+											price: data[1].price,
+											quantity: data.userIPR.quantity
+										}, {
+											symbol: data[2].symbol,
+											price: data[2].price,
+											quantity: data.userIPR.quantity
+										}, {
+											symbol: data[3].symbol,
+											price: data[3].price,
+											quantity: data.userIPR.target_quantity
+										}],
+									invest: data.userIPR.invest,
+									quote: 'usdt'
+								});
 						}
 
 					}
@@ -57,7 +84,7 @@ class Worker {
 	#callback = {
 		open: () => {
 			this.#log(`Connected to Server`)
-			this.#started = true;
+			this.started = true;
 		},
 		message: async data => {
 			// x = [NEW,CANCELED,PARTIALLY_FILLED,FILLED]
@@ -132,27 +159,63 @@ class Worker {
 									this.pnl += profit;
 									this.btc += parseFloat(lot_btc);
 									this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
-									this.#pushSuccess(`Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
+									this.#pushSuccess(
+										{
+											symbol: [
+												{
+													symbol: order.data[1].symbol,
+													price: order.data[1].price,
+													quantity: order.data.userIPR.quantity
+												}, {
+													symbol: order.data[2].symbol,
+													price: order.data[2].price,
+													quantity: order.data.userIPR.quantity
+												}, {
+													symbol: order.data[3].symbol,
+													price: order.data[3].price,
+													quantity: order.data.userIPR.target_quantity
+												}],
+											profit: profit.toFixed(6),
+											invest: order.data.userIPR.invest,
+											quote: 'usdt'
+										});
+
 									this.takeOrder += 1;
 								}
 								else if (order.response.symbol.includes('USDT')) {
 									try {
 										const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data.userIPR.quantity, order.data[2].price)
-										if (!response.data) {
-											this.openOrder = this.openOrder.filter(x => x.response.orderId !== json.orderId);
-											return
-										}
 										order.response = {
 											symbol: response.data.symbol,
 											orderId: response.data.orderId,
 											status: response.data.status,
 											origQty: response.data.origQty,
-											step:2
+											step: 2
 										}
 									}
 									catch (error) {
-										this.#started = false;
+										this.started = false;
 										this.#error(error);
+										this.#pushError(
+											{
+												error: error.response?.data?.msg,
+												symbol: [
+													{
+														symbol: order.data[1].symbol,
+														price: order.data[1].price,
+														quantity: order.data.userIPR.quantity
+													}, {
+														symbol: order.data[2].symbol,
+														price: order.data[2].price,
+														quantity: order.data.userIPR.quantity
+													}, {
+														symbol: order.data[3].symbol,
+														price: order.data[3].price,
+														quantity: order.data.userIPR.target_quantity
+													}],
+												invest: order.data.userIPR.invest,
+												quote: 'usdt'
+											});
 									}
 								} else if (order.response.symbol.includes('BTC')) {
 									try {
@@ -166,12 +229,32 @@ class Worker {
 											orderId: response.data.orderId,
 											status: response.data.status,
 											origQty: response.data.origQty,
-											step:3
+											step: 3
 										}
 									}
 									catch (error) {
-										this.#started = false;
+										this.started = false;
 										this.#error(error);
+										this.#pushError(
+											{
+												error: error.response?.data?.msg,
+												symbol: [
+													{
+														symbol: order.data[1].symbol,
+														price: order.data[1].price,
+														quantity: order.data.userIPR.quantity
+													}, {
+														symbol: order.data[2].symbol,
+														price: order.data[2].price,
+														quantity: order.data.userIPR.quantity
+													}, {
+														symbol: order.data[3].symbol,
+														price: order.data[3].price,
+														quantity: order.data.userIPR.target_quantity
+													}],
+												invest: order.data.userIPR.invest,
+												quote: 'usdt'
+											});
 									}
 								}
 							} else if (order.data[0].pattern === "B") {
@@ -185,7 +268,27 @@ class Worker {
 									this.pnl += profit;
 
 									this.#log(`Arbitrage Success Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
-									this.#pushSuccess(`Symbol [${order.data[1].symbol} ${order.data[2].symbol} ${order.data[3].symbol}] profit ${profit.toFixed(6)} usdt`);
+									this.#pushSuccess(
+										{
+											symbol: [
+												{
+													symbol: order.data[1].symbol,
+													price: order.data[1].price,
+													quantity: order.data.userIPR.quantity
+												}, {
+													symbol: order.data[2].symbol,
+													price: order.data[2].price,
+													quantity: order.data.userIPR.target_quantity
+												}, {
+													symbol: order.data[3].symbol,
+													price: order.data[3].price,
+													quantity: order.data.userIPR.target_quantity
+												}],
+											profit: profit.toFixed(6),
+											invest: order.data.userIPR.invest,
+											quote: 'usdt'
+
+										});
 									this.takeOrder += 1;
 								}
 								else if (order.response.symbol === 'BTCUSDT') {
@@ -201,12 +304,32 @@ class Worker {
 											orderId: response.data.orderId,
 											status: response.data.status,
 											origQty: response.data.origQty,
-											step:2
+											step: 2
 										}
 									}
 									catch (error) {
-										this.#started = false;
+										this.started = false;
 										this.#error(error);
+										this.#pushError(
+											{
+												error: error.response?.data?.msg,
+												symbol: [
+													{
+														symbol: order.data[1].symbol,
+														price: order.data[1].price,
+														quantity: order.data.userIPR.quantity
+													}, {
+														symbol: order.data[2].symbol,
+														price: order.data[2].price,
+														quantity: order.data.userIPR.quantity
+													}, {
+														symbol: order.data[3].symbol,
+														price: order.data[3].price,
+														quantity: order.data.userIPR.target_quantity
+													}],
+												invest: order.data.userIPR.invest,
+												quote: 'usdt'
+											});
 									}
 								}
 								else if (order.response.symbol.includes('BTC')) {
@@ -221,12 +344,32 @@ class Worker {
 											orderId: response.data.orderId,
 											status: response.data.status,
 											origQty: response.data.origQty,
-											step:3
+											step: 3
 										}
 									}
 									catch (error) {
-										this.#started = false;
+										this.started = false;
 										this.#error(error);
+										this.#pushError(
+											{
+												error: error.response?.data?.msg,
+												symbol: [
+													{
+														symbol: order.data[1].symbol,
+														price: order.data[1].price,
+														quantity: order.data.userIPR.quantity
+													}, {
+														symbol: order.data[2].symbol,
+														price: order.data[2].price,
+														quantity: order.data.userIPR.quantity
+													}, {
+														symbol: order.data[3].symbol,
+														price: order.data[3].price,
+														quantity: order.data.userIPR.target_quantity
+													}],
+												invest: order.data.userIPR.invest,
+												quote: 'usdt'
+											});
 									}
 								}
 							}
@@ -248,18 +391,18 @@ class Worker {
 	#pushSuccess(msg) {
 		let d = new Date();
 		let n = d.toLocaleTimeString();
-		let message = `${n} ${msg}`
+		msg.localtime = n;
 		if (this.success > 100)
 			this.success.shift();
-		this.success.push(message);
+		this.success.push(msg);
 	}
 	#pushError(msg) {
 		let d = new Date();
 		let n = d.toLocaleTimeString();
-		let message = `${n} ${msg}`
+		msg.localtime = n;
 		if (this.success > 100)
 			this.success.shift();
-		this.catchmessage.push(message);
+		this.catchmessage.push(msg);
 	}
 	#report() {
 		const _this = this;
@@ -273,70 +416,174 @@ class Worker {
 		this.#log(`Restart Socket`);
 		this.#openOrder().then(oOrder => {
 			this.openOrder.map(async (order) => {
-				const _ok = oOrder.data.some(x => x.orderId === order.response.orderId);
-				if (!_ok)
-				{
+				let _ok = false;
+				if (oOrder?.data.length)
+					_ok = oOrder.data.some(x => x.orderId === order.response.orderId);
+				if (!_ok) {
 					const index = order.response.step;
-					if(index<3)
-					{
-						if(order.data[0].pattern === 'A')
-						{
-							if(index === 1)
-							{
-								const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[2].price)
-								order.response = {
-									symbol: response.data.symbol,
-									orderId: response.data.orderId,
-									status: response.data.status,
-									origQty: response.data.origQty,
-									step:2
+					if (index < 3) {
+						if (order.data[0].pattern === 'A') {
+							if (index === 1) {
+								try {
+									const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[2].price)
+									order.response = {
+										symbol: response.data.symbol,
+										orderId: response.data.orderId,
+										status: response.data.status,
+										origQty: response.data.origQty,
+										step: 2
+									}
+								} catch (error) {
+									this.started = false;
+									this.#error(error);
+									this.#pushError(
+										{
+											error: error.response?.data?.msg,
+											symbol: [
+												{
+													symbol: order.data[1].symbol,
+													price: order.data[1].price,
+													quantity: order.data.userIPR.quantity
+												}, {
+													symbol: order.data[2].symbol,
+													price: order.data[2].price,
+													quantity: order.data.userIPR.quantity
+												}, {
+													symbol: order.data[3].symbol,
+													price: order.data[3].price,
+													quantity: order.data.userIPR.target_quantity
+												}],
+											invest: order.data.userIPR.invest,
+											quote: 'usdt'
+										});
 								}
+
 							}
-							else if(index === 2)
-							{
-								const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[3].price)
-								order.response = {
-									symbol: response.data.symbol,
-									orderId: response.data.orderId,
-									status: response.data.status,
-									origQty: response.data.origQty,
-									step:3
+							else if (index === 2) {
+								try {
+									const response = await this.#newOrder(order.data[3].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[3].price)
+									order.response = {
+										symbol: response.data.symbol,
+										orderId: response.data.orderId,
+										status: response.data.status,
+										origQty: response.data.origQty,
+										step: 3
+									}
+								}
+								catch (error) {
+									this.started = false;
+									this.#error(error);
+									this.#pushError(
+										{
+											error: error.response?.data?.msg,
+											symbol: [
+												{
+													symbol: order.data[1].symbol,
+													price: order.data[1].price,
+													quantity: order.data.userIPR.quantity
+												}, {
+													symbol: order.data[2].symbol,
+													price: order.data[2].price,
+													quantity: order.data.userIPR.quantity
+												}, {
+													symbol: order.data[3].symbol,
+													price: order.data[3].price,
+													quantity: order.data.userIPR.target_quantity
+												}],
+											invest: order.data.userIPR.invest,
+											quote: 'usdt'
+										});
 								}
 							}
 						}
-						else if(order.data[0].pattern === 'B')
-						{
-							if(index === 1)
-							{
-								const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[2].price)
-								order.response = {
-									symbol: response.data.symbol,
-									orderId: response.data.orderId,
-									status: response.data.status,
-									origQty: response.data.origQty,
-									step:2
+						else if (order.data[0].pattern === 'B') {
+							if (index === 1) {
+								try {
+									const response = await this.#newOrder(order.data[2].symbol, 'SELL', order.data.userIPR.target_quantity, order.data[2].price)
+									order.response = {
+										symbol: response.data.symbol,
+										orderId: response.data.orderId,
+										status: response.data.status,
+										origQty: response.data.origQty,
+										step: 2
+									}
+								}
+								catch (error) {
+									this.started = false;
+									this.#error(error);
+									this.#pushError(
+										{
+											error: error.response?.data?.msg,
+											symbol: [
+												{
+													symbol: order.data[1].symbol,
+													price: order.data[1].price,
+													quantity: order.data.userIPR.quantity
+												}, {
+													symbol: order.data[2].symbol,
+													price: order.data[2].price,
+													quantity: order.data.userIPR.quantity
+												}, {
+													symbol: order.data[3].symbol,
+													price: order.data[3].price,
+													quantity: order.data.userIPR.target_quantity
+												}],
+											invest: order.data.userIPR.invest,
+											quote: 'usdt'
+										});
 								}
 							}
-							else if(index === 2)
-							{
-								const response = await this.#newOrder(order.data[3].symbol, 'BUY', order.data.userIPR.target_quantity, order.data[3].price)
-								order.response = {
-									symbol: response.data.symbol,
-									orderId: response.data.orderId,
-									status: response.data.status,
-									origQty: response.data.origQty,
-									step:3
+							else if (index === 2) {
+								try {
+									const response = await this.#newOrder(order.data[3].symbol, 'BUY', order.data.userIPR.target_quantity, order.data[3].price)
+									order.response = {
+										symbol: response.data.symbol,
+										orderId: response.data.orderId,
+										status: response.data.status,
+										origQty: response.data.origQty,
+										step: 3
+									}
+								}
+								catch (error) {
+									this.started = false;
+									this.#error(error);
+									this.#pushError(
+										{
+											error: error.response?.data?.msg,
+											symbol: [
+												{
+													symbol: order.data[1].symbol,
+													price: order.data[1].price,
+													quantity: order.data.userIPR.quantity
+												}, {
+													symbol: order.data[2].symbol,
+													price: order.data[2].price,
+													quantity: order.data.userIPR.quantity
+												}, {
+													symbol: order.data[3].symbol,
+													price: order.data[3].price,
+													quantity: order.data.userIPR.target_quantity
+												}],
+											invest: order.data.userIPR.invest,
+											quote: 'usdt'
+										});
 								}
 							}
 						}
-						
-					}else{
-						this.openOrder = this.openOrder.filter(x => x.response.orderId !== res.response.orderId);
+
+					} else {
+						this.openOrder = this.openOrder.filter(x => x?.response?.orderId !== oOrder?.response?.orderId);
 					}
-					
-					
 				}
 			})
+		}, error => {
+			this.started = false;
+			console.log({
+				header: 'refresh'
+				, msg: error?.response?.data?.msg
+			})
+			this.errorMessage = error.response.data?.msg
+			return error;
 		})
 	}
 	#log(msg) {
@@ -348,16 +595,21 @@ class Worker {
 	#error(msg) {
 		var d = new Date();
 		var n = d.toLocaleTimeString();
+		this.#socket.emit('error', {
+			message: `${n} user:[${this.label}] [ error ]`,
+			error: msg.response?.data?.msg
+		});
+		this.errorMessage = msg.response?.data?.msg;
 		console.log(
 			{
 				message: `${n} user:[${this.label}] [ error ]`,
-				error: msg
+				error: msg.response?.data
 			});
 	}
 	async #myWallet() {
 		try {
 			const response = await this.#client.userAsset();
-			const stable = response.data.find(x => x.asset === 'USDT') ;
+			const stable = response.data.find(x => x.asset === 'USDT');
 			const bnb = response.data.find(x => x.asset === 'BNB');
 			this.Invesment = parseFloat(stable?.free ? stable.free : 0);
 			this.BNB = parseFloat(bnb?.free ? bnb.free : 0);
@@ -365,26 +617,23 @@ class Worker {
 			this.#log(`balance of ${this.BNB} BNB`)
 			return response.data
 		} catch (error) {
-			console.log('wallet error')
-			this.#started = false;
+			console.log({
+				header: 'wallet'
+				, msg: error?.response?.data?.msg
+			})
+			this.started = false;
 			this.#error(error.response.data);
-			this.errorMessage = error.response.data?.msg;
+			this.errorMessage = error?.response?.data?.msg;
 		}
 	}
 	async #newOrder(symbol, signal, quantity, price) {
-		try {
-			const response = await this.#client.newOrder(symbol, signal, 'LIMIT',
-				{
-					quantity: quantity,
-					price: price,
-					timeInForce: 'GTC'
-				});
-			return response;
-		} catch (error) {
-			this.errorMessage = error.response.data?.msg;
-			this.#error(error.response.data)
-			return error;
-		}
+		const response = await this.#client.newOrder(symbol, signal, 'LIMIT',
+			{
+				quantity: quantity,
+				price: price,
+				timeInForce: 'GTC'
+			});
+		return response;
 	}
 	async #createListenKey() {
 		try {
@@ -392,23 +641,19 @@ class Worker {
 			this.#listenkey = response.data.listenKey;
 			this.#report();
 		} catch (error) {
-			this.#started = false;
-			console.log(error.response.data)
+			this.started = false;
+			console.log({
+				header: 'createlistenkey'
+				, msg: error?.response?.data?.msg
+			})
 			this.errorMessage = error.response.data?.msg
 			return error;
 		}
 	}
 
 	async #openOrder() {
-		try {
-			const response = await this.#client.openOrders()
-			return response;
-		} catch (error) {
-			this.#started = false;
-			console.log(error.response.data)
-			this.errorMessage = error.response.data?.msg
-			return error;
-		}
+		const response = await this.#client.openOrders()
+		return response;
 	}
 
 	async #cancelOrder(symbol, _orderId) {
@@ -423,16 +668,17 @@ class Worker {
 		this.#client.unsubscribe(this.#wsRef);
 	}
 	status() {
-		return this.#started;
+		return this.started;
 	}
 	removeOrder(orderId) {
 		this.openOrder = this.openOrder.filter(x => x.response.orderId != orderId);
 		return orderId;
 	}
 	delete() {
-		this.#started = false;
+		this.started = false;
 		this.#disconnect();
 	}
+
 }
 
 module.exports = Worker;
