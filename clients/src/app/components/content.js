@@ -6,6 +6,7 @@ import Tables from "./page/tables";
 import Remove from "./page/remove";
 import Errors from "./page/error";
 import Addworker from "./page/addworker";
+import Setup from "./page/setup";
 import GetAll from "./admin/getall";
 
 import Loading from "./loading";
@@ -18,11 +19,11 @@ const parseJwt = (token) => {
 };
 const Content = (prop) => {
 	const [init, setInit] = useState(false);
-	if(!init){
+	if (!init) {
 		setInit(true)
 		console.log(init)
 	}
-	
+
 
 	const [data, response] = useState();
 	const [time, setTime] = useState(null);
@@ -32,15 +33,15 @@ const Content = (prop) => {
 		invest: 11,
 		server: ''
 	});
+
 	const [_error, setError] = useState(false);
 	const [timerUser, setUsertimer] = useState(false);
 	const [timerAlive, setAlivetimer] = useState(false);
 	const [ipaddress, setIPaddress] = useState([]);
 	const [canvas, setCanvas] = useState(false);
 	const [canvasRender, setCanvasrender] = useState("sidebar sidebar-offcanvas");
-	const [page, setPage] = useState(0);
+	const [page, setPage] = useState(100);
 	const [isServer, setServers] = useState();
-	const [myServer, setMyServer] = useState();
 	const setInput = (e) => {
 		const { name, value } = e.target;
 		setData((prev) => {
@@ -50,7 +51,7 @@ const Content = (prop) => {
 			}
 		})
 	}
-
+	
 	useEffect(() => {
 		const user = JSON.parse(localStorage.getItem("user"));
 		let userData;
@@ -74,7 +75,6 @@ const Content = (prop) => {
 
 		AuthService.myserver().then((res) => {
 			if (res.data.server.includes('server')) {
-				setMyServer(res.data.server);
 				AuthService.getUserBoard().then((res) => {
 					userData = res.data.data;
 					userData.success = userData.success.reverse();
@@ -114,6 +114,7 @@ const Content = (prop) => {
 					userData.success = userData.success.reverse();
 					response(userData);
 				}, error => {
+					console.log(error)
 					if (error.response.data?.status === 1021) {
 						prop.logOut(prop.state);
 					}
@@ -158,8 +159,10 @@ const Content = (prop) => {
 	}
 	const renderState = () => {
 		switch (page) {
-			case 0:
+			case 100:
 				return <Info data={data} time={time} />;
+			case 0:
+				return <Setup  data={data} AuthService={AuthService}/>;
 			case 1:
 				return <Tables data={data} />;
 			case 2:
@@ -221,6 +224,7 @@ const Content = (prop) => {
 						</a> */}
 					</div>
 				</div>
+				
 				<div className="text-center navbar-brand-wrapper d-flex align-items-center justify-content-start">
 					<button className="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button" onClick={canvasToggle}>
 						<a className="navbar-brand" href="#">
@@ -238,7 +242,7 @@ const Content = (prop) => {
 			<div className="container-fluid page-body-wrapper">
 				<nav className={canvasRender} id="sidebar">
 					<ul className="nav">
-						<li className="nav-item" onClick={() => setPage(0)}>
+						<li className="nav-item" onClick={() => setPage(100)}>
 							<a className="active nav-link" href="#">
 								<i className="mdi mdi-grid-large menu-icon"></i>
 								<span className="menu-title">Dashboard</span>
@@ -253,7 +257,7 @@ const Content = (prop) => {
 							</a>
 							<div className="collapse" id="ui-basic">
 								<ul className="nav flex-column sub-menu">
-									<li className="nav-item" onClick={() => { menuToggle(0); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-account-card-details"></i>Profile</a></li>
+									<li className="nav-item" onClick={() => { menuToggle(100); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-account-card-details"></i>Profile</a></li>
 									<li className="nav-item" onClick={() => prop.logOut(prop.state)}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-logout"></i>Sign out</a></li>
 								</ul>
 							</div>
@@ -269,7 +273,7 @@ const Content = (prop) => {
 									</a>
 									<div className="collapse" id="ui-process">
 										<ul className="nav flex-column sub-menu">
-											<li className="nav-item" onClick={() => { menuToggle(0); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-television-guide"></i>Info</a></li>
+											<li className="nav-item" onClick={() => { menuToggle(0); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-television-guide"></i>Setup</a></li>
 											<li className="nav-item" onClick={() => { menuToggle(1); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-library-books"></i>Tebles</a></li>
 											<li className="nav-item" onClick={() => { menuToggle(2); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-message-text"></i>Messages</a></li>
 											<li className="nav-item" onClick={() => { menuToggle(3); }}> <a className="nav-link" href="#"><i className="menu-icon mdi mdi-alert-circle"></i>Error</a></li>

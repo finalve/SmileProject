@@ -1,11 +1,13 @@
-var { arbitrage } = require('../models/vDB');
+const { Spot } = require('@binance/connector');
+const client = new Spot('', '');
+var { workers, arbitrage } = require('../models/vDB');
 class Arbitrage {
     #wsRef;
     #r_wsRef;
     constructor(eInfo, servername) {
         this.servername = servername;
         this.#wsRef = client.tickerWS('', {
-            open: () => console.debug('Connected with Websocket server'),
+            open: () => console.debug('Connected with Websocket server', this.servername),
             close: () => console.debug('Disconnected with Websocket server'),
             message: async data => {
                 let symbols = JSON.parse(data);
@@ -36,7 +38,7 @@ class Arbitrage {
         })
 
         this.#r_wsRef = client.tickerWS('', {
-            open: () => console.debug('Connected with Websocket server'),
+            open: () => console.debug('Connected with Websocket server', this.servername),
             close: () => console.debug('Disconnected with Websocket server'),
             message: async data => {
                 let symbols = JSON.parse(data);
@@ -116,7 +118,7 @@ class Arbitrage {
             const targetPrice = target.b;
             const lotsize = filter.lotsize;
             this.#log(`Found arbitrage ${compare} % symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
-            instance.arbitrage.push({
+            arbitrage.push({
                 msg: "Found arbitrage",
                 result: compare,
                 symbol: target.s.replace('BTC', ''),
@@ -124,13 +126,15 @@ class Arbitrage {
                 price: compare_price,
                 stable: 'USDT'
             })
-            if (instance) {
-                const tasks = instance.worker.map(async user => {
+            if (workers) {
+                const tasks = workers.map(async user => {
                     const data = [
                         {
-                            symbol: 'USDT',
+                            stable: 'USDT',
+                            symbol: target.s.replace('BTC', ''),
                             result: compare,
-                            pattern: compare_pattern
+                            pattern: compare_pattern,
+                            lotsize: lotsize
                         }, {
                             symbol: compare_symbol[1],
                             price: compare_price[1]
@@ -141,14 +145,13 @@ class Arbitrage {
                             symbol: compare_symbol[3],
                             price: compare_price[3]
                         }];
-                    await user.arbitrage({ data }, (ipr) => {
-                        const quantity = this.#lot(ipr / stablePrice, lotsize);
-                        const invest = this.#lot(quantity * stablePrice, '0.0001');
-                        const target_quantity = this.#lot(quantity * targetPrice, '0.00001');
-                        const true_target_quantity = this.#lot(quantity * targetPrice, '0.00000001');
-                        const true_quantity = true_target_quantity - target_quantity
-                        return { invest, quantity, target_quantity, true_quantity }
-                    });
+
+                    try {
+                        await user.process.send({ cmd: 'arbitrage', data: data });
+                    } catch (err) {
+                        console.log(err)
+                    }
+
                 });
                 await Promise.all(tasks);
             }
@@ -162,7 +165,7 @@ class Arbitrage {
             const targetPrice = target.a;
             const lotsize = filter.lotsize;
             this.#log(`Found arbitrage ${compare} % symbol ${target.s.replace('BTC', '')} Pattern ${compare_pattern}`)
-            instance.arbitrage.push({
+            arbitrage.push({
                 msg: "Found arbitrage",
                 result: compare,
                 symbol: target.s.replace('BTC', ''),
@@ -170,14 +173,15 @@ class Arbitrage {
                 price: compare_price,
                 stable: 'USDT'
             })
-            if (instance) {
-                const tasks = instance.worker.map(async user => {
+            if (workers) {
+                const tasks = workers.map(async user => {
                     const data = [
                         {
-                            symbol: 'USDT',
+                            stable: 'USDT',
+                            symbol: target.s.replace('BTC', ''),
                             result: compare,
                             pattern: compare_pattern,
-                            filter: filter
+                            lotsize: lotsize
                         }, {
                             symbol: compare_symbol[1],
                             price: compare_price[1]
@@ -188,13 +192,13 @@ class Arbitrage {
                             symbol: compare_symbol[3],
                             price: compare_price[3]
                         }];
-                    await user.arbitrage({ data }, (ipr) => {
-                        const quantity = this.#lot(ipr / stablePrice, '0.00001');
-                        const invest = this.#lot(quantity * stablePrice, '0.0001');
-                        const target_quantity = this.#lot(quantity / targetPrice, lotsize);
-                        const true_quantity = this.#lot(target_quantity * targetPrice, '0.00000001');
-                        return { invest, quantity, target_quantity, true_quantity }
-                    });
+
+                    try {
+                        await user.process.send({ cmd: 'arbitrage', data: data });
+                    } catch (err) {
+                        console.log(err)
+                    }
+
                 });
                 await Promise.all(tasks);
             }

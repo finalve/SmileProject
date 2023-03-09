@@ -21,11 +21,12 @@ export default function AddWorker({ apiData, submitAdd, setInput, ipaddress, ser
                                     <input type="text" className="form-control form-control-lg" name='apiserect' value={apiData.apiserect} onChange={setInput} placeholder="API SERECT" required />
                                     <div className="alert alert-dark mb-4 mt-3" role="alert">
                                         <i className="mdi mdi-pin me-1"></i>
-                                        กรุณา เพิ่ม Address Server ที่ ** <span className="text-warning">Binance API Management </span> </div>
+                                        กรุณา เพิ่ม Address Server ที่ ** <span className="text-warning">Binance API Management </span>
+                                    </div>
                                 </div>
                                 <div className="form-group">
-                                    <label>Invest Per Rate</label>
-                                    <input type="number" className="form-control form-control-lg" name='invest' value={apiData.invest} onChange={setInput} placeholder="Invest Per Rate ( Default 11 USDT )" />
+                                    <label>Invest Per Order</label>
+                                    <input type="number" className="form-control form-control-lg" name='invest' value={apiData.invest} onChange={setInput} placeholder="Invest Per Order ( Default 11 USDT )" />
                                 </div>
                                 <div className="form-group">
                                     <label>Server</label>

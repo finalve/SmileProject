@@ -49,7 +49,7 @@ class Socket {
 				this.clientResponse.set(res.id, res);
 			});
 
-			socket.on('edit', (res) => {
+			socket.on('setup', (res) => {
 				this.clientResponse.set(res.id, res);
 			});
 

@@ -120,15 +120,22 @@ exports.userdata = (req, res) => {
 	socket.response(req, res);
 };
 
-exports.edit = (req, res) => {
+exports.setup = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
-	log(req.headers["x-real-ip"], `user :: ${req.body.label} edit worker`);
+	log(req.headers["x-real-ip"], `user :: ${req.body.label} setup worker`);
 	socket.response(req, res);
 };
 
 exports.alluser = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} get all user`);
+	socket.response(req, res);
+};
+
+
+exports.adminview = (req, res) => {
+	req.body._ip = req.headers["x-real-ip"];
+	log(req.headers["x-real-ip"], `user :: ${req.body.label} admin view user`);
 	socket.response(req, res);
 };
 

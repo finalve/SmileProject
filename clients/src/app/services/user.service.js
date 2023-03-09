@@ -27,6 +27,10 @@ class UserService {
     return axios.post(API_URL + 'add', { apikey, apiserect, invest, server }, { headers: authHeader() });
   }
 
+  setup({invest,maxlen},blacklist) {
+    return axios.post(API_URL + 'setup', { invest, maxlen, blacklist }, { headers: authHeader() });
+  }
+
 
 
   getModeratorBoard() {
@@ -39,6 +43,10 @@ class UserService {
 
   admin_getAll({ server }) {
     return axios.post(API_URL + 'alluser', { server }, { headers: authHeader() });
+  }
+
+  admin_view({ userlabel }) {
+    return axios.post(API_URL + 'adminview', { userlabel }, { headers: authHeader() });
   }
 
   admin_remove({ userlabel, server }) {

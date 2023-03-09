@@ -28,7 +28,10 @@ io.use((socket, next) => {
 		next();
 	});
 });
-
+app.use((err, req, res, next) => {
+	console.error(err.stack)
+	res.status(500).send('Something broke!')
+  })
 app.use('/api', userRoutes);
 
 const Role = db.role;

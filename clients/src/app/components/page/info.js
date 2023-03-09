@@ -13,15 +13,19 @@ export default function Info({ data, time }) {
 			<div style={{ borderRadius: "50%" }}>
 				<div className='d-flex justify-content-center'>
 					<div className='p-2 w-25 text-light bg-secondary bg-opacity-50'>Balance</div>
-					<div className='p-2 flex-fill text-light text-end  '>{data.invesment}</div>
+					<div className='p-2 flex-fill text-light text-end  '>{data.investment}</div>
 				</div>
 				<div className='d-flex justify-content-start'>
-					<div className='p-2 w-25 text-light bg-secondary bg-opacity-50'>IPR</div>
-					<div className='p-2 flex-fill text-light text-end'>{data.ipr}</div>
+					<div className='p-2 w-25 text-light bg-secondary bg-opacity-50'>IPO</div>
+					<div className='p-2 flex-fill text-light text-end'>{data.ipo}</div>
 				</div>
 				<div className='d-flex justify-content-start'>
 					<div className='p-2 w-25 text-light bg-secondary bg-opacity-50'>Order</div>
 					<div className='p-2 flex-fill text-light text-end'>{data.len}/{data.maxlen}</div>
+				</div>
+				<div className='d-flex justify-content-start'>
+					<div className='p-2 w-25 text-light bg-secondary bg-opacity-50'>Successful</div>
+					<div className='p-2 flex-fill text-light text-end'>{data.takeorder}</div>
 				</div>
 				<div className='d-flex justify-content-start'>
 					<div className='p-2 w-25 text-light bg-secondary bg-opacity-50'>USDT</div>
