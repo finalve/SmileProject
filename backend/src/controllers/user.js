@@ -100,35 +100,47 @@ exports.login = (req, res) => {
 exports.myserver = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} get my server`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error'})
 	socket.myserver(req, res);
 };
 
 exports.add = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} add worker`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error'})
 	socket.exists(req, res);
 };
 
 exports.delete = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} delete worker`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error'})
 	socket.response(req, res);
 };
 
 exports.userdata = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error' })
 	socket.response(req, res);
 };
 
 exports.setup = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} setup worker`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error'})
 	socket.response(req, res);
 };
 
 exports.alluser = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} get all user`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error'})
 	socket.response(req, res);
 };
 
@@ -136,36 +148,48 @@ exports.alluser = (req, res) => {
 exports.adminview = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} admin view user`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error' })
 	socket.response(req, res);
 };
 
 exports.rmorder = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} remove order`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error'})
 	socket.response(req, res);
 };
 
 exports.adminedit = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} edit user by admin`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error'})
 	socket.response(req, res);
 };
 
 exports.admindelete = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} delete user by admin`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error' })
 	socket.response(req, res);
 };
 
 exports.adminrmorder = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `user :: ${req.body.label} remove order by admin`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error' })
 	socket.response(req, res);
 };
 
 exports.getipaddress = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `get ip address`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error' })
 	res.status(200).json({
 		ip: req.headers["x-real-ip"]
 	});
@@ -174,6 +198,8 @@ exports.getipaddress = (req, res) => {
 exports.getserveraddress = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `get server address`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error'})
 	res.status(200).json({
 		ip: socket.ipaddress
 	});
@@ -182,6 +208,8 @@ exports.getserveraddress = (req, res) => {
 exports.getServerName = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `get server address`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error'})
 	res.status(200).json({
 		servers: socket.server
 	});
@@ -189,6 +217,8 @@ exports.getServerName = (req, res) => {
  exports.arbitrage = (req, res) => {
 	req.body._ip = req.headers["x-real-ip"];
 	log(req.headers["x-real-ip"], `get server address`);
+	if(!socket)
+	return res.status(500).json({ status: 500, message: 'Internal Server Error' })
  	socket.response(req,res);
 };
 

@@ -12,6 +12,8 @@ class Worker {
         this.apikey = apikey;
         this.#serect = apiserect;
         this.investment = 0;
+        this.minrate = 100.15;
+        this.maxrate = 101.00;
         this.bnb = 0;
         this.pnl = 0;
         this.btc = 0;
@@ -43,6 +45,7 @@ class Worker {
         this.ipo = req?.invest ? req.invest : this.ipo;
         this.orderLength = req?.maxlen ? req?.maxlen : this.orderLength;
         this.backlist = Array.isArray(req.blacklist) ? req.blacklist : this.backlist;
+        this.rate = req?.rate ? 100 + req?.rate : this.rate
     }
 
     Data() {
@@ -54,6 +57,7 @@ class Worker {
             len: this.openOrder.length,
             investment: this.investment,
             ipo: this.ipo,
+            rate: this.rate,
             alive: this.alive,
             pnl: this.pnl.toFixed(8),
             btc: this.btc.toFixed(8),
@@ -87,49 +91,49 @@ class Worker {
         if (this.started)
             if (this.available) {
                 if (this.investment > this.ipo)
-                    if (!this.backlist.some(x => x === data[0].symbol))
-                    {
+                    if (!this.backlist.some(x => x === data[0].symbol)) {
                         if (this.bnb > 0)
-                        if (this.openOrder.length < this.orderLength) {
-                            const userIPR = this.TrushInvest(data)(this.ipo)
-                            data.userIPR = userIPR;
-                            this.#newOrder(data[1].symbol, 'BUY', userIPR.quantity, data[1].price).then(response => {
-                                this.openOrder.push({
-                                    data: data, response:
-                                    {
-                                        symbol: response.data.symbol,
-                                        orderId: response.data.orderId,
-                                        status: response.data.status,
-                                        origQty: response.data.origQty,
-                                        step: 1
-                                    }
-                                });
-                            }).catch(error => {
-                                this.#error(`tradeing parttern ${data[0].pattern} step 1`, error.response?.data?.msg);
-                                this.#pushError(
-                                    {
-                                        error: error.response?.data?.msg,
-                                        symbol: [
+                            if (parseFloat(data[0].result) >= this.minrate && parseFloat(data[0].result) <= this.minrate)
+                                if (this.openOrder.length < this.orderLength) {
+                                    const userIPR = this.TrushInvest(data)(this.ipo)
+                                    data.userIPR = userIPR;
+                                    this.#newOrder(data[1].symbol, 'BUY', userIPR.quantity, data[1].price).then(response => {
+                                        this.openOrder.push({
+                                            data: data, response:
                                             {
-                                                symbol: data[1].symbol,
-                                                price: data[1].price,
-                                                quantity: data.userIPR.quantity
-                                            }, {
-                                                symbol: data[2].symbol,
-                                                price: data[2].price,
-                                                quantity: data.userIPR.quantity
-                                            }, {
-                                                symbol: data[3].symbol,
-                                                price: data[3].price,
-                                                quantity: data.userIPR.target_quantity
-                                            }],
-                                        invest: data.userIPR.invest,
-                                        quote: 'usdt'
-                                    });
-                            })
-                        }
-                    } else{
-                        this.#log(`Blacklist ${ data[0].symbol}`);
+                                                symbol: response.data.symbol,
+                                                orderId: response.data.orderId,
+                                                status: response.data.status,
+                                                origQty: response.data.origQty,
+                                                step: 1
+                                            }
+                                        });
+                                    }).catch(error => {
+                                        this.#error(`tradeing parttern ${data[0].pattern} step 1`, error.response?.data?.msg);
+                                        this.#pushError(
+                                            {
+                                                error: error.response?.data?.msg,
+                                                symbol: [
+                                                    {
+                                                        symbol: data[1].symbol,
+                                                        price: data[1].price,
+                                                        quantity: data.userIPR.quantity
+                                                    }, {
+                                                        symbol: data[2].symbol,
+                                                        price: data[2].price,
+                                                        quantity: data.userIPR.quantity
+                                                    }, {
+                                                        symbol: data[3].symbol,
+                                                        price: data[3].price,
+                                                        quantity: data.userIPR.target_quantity
+                                                    }],
+                                                invest: data.userIPR.invest,
+                                                quote: 'usdt'
+                                            });
+                                    })
+                                }
+                    } else {
+                        this.#log(`Blacklist ${data[0].symbol}`);
                     }
             }
     }

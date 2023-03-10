@@ -135,7 +135,7 @@ class Bridge {
             if (!foundWorker)
                 return
 
-            if (isNaN(req.invest) || isNaN(req.maxlen)) {
+            if (isNaN(req.invest) || isNaN(req.maxlen) || isNaN(req.minrate)|| isNaN(req.maxrate)) {
                 this.#socket.emit('setup', {
                     status: 400,
                     id: req._id,
@@ -144,6 +144,10 @@ class Bridge {
                 this.#log(`Worker ${req.label} IP::[${req._ip}] invalid type!`);
                 return
             }
+            if (req.invest < 11)
+                req.invest = 11;
+            if (req.minrate < 0.15)
+                req.rate = 0.15
             foundWorker.process.send({ cmd: 'setup', data: req });
 
             return foundWorker.process.once('message', (msg) => {
@@ -269,7 +273,7 @@ class Bridge {
             if (req?.server !== config.servername)
                 return;
             const allworker = workers.map(x => {
-                return { label: x.label ,error:x.error,statis:x.status}
+                return { label: x.label, error: x.error, statis: x.status }
             })
             return this.#socket.emit('alluser', {
                 status: 200,
@@ -289,7 +293,7 @@ class Bridge {
                 this.#socket.emit('userdata', {
                     status: 200,
                     id: req._id,
-                    server:config.servername,
+                    server: config.servername,
                     data: msg
                 })
             })

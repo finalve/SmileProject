@@ -301,8 +301,10 @@ export default function Setup({ data ,AuthService }) {
 
     const [options, setOption] = useState(optionsData);
     const [modifyData, setmodifyData] = useState({
-        invest: data.ipo,
-        maxlen: data.maxlen
+        invest: data?.ipo,
+        maxlen: data?.maxlen,
+        rate:data?.minrate,
+        rate:data?.maxrate,
     });
 
     const setInput = (e) => {
@@ -346,8 +348,16 @@ export default function Setup({ data ,AuthService }) {
                                     <input type="number" className="form-control form-control-lg" name='maxlen' value={modifyData.maxlen} onChange={setInput} placeholder="จำนวนการถือออเดอร์สูงสุด" required />
                                 </div>
                                 <div className="form-group">
-                                    <label>การลงทุนต่อออเดอร์</label>
+                                    <label>การลงทุนต่อออเดอร์ <span className="text-warning"> ( ขั้นต่ำ 11 USDT ) </span></label>
                                     <input type="number" className="form-control form-control-lg" name='invest' value={modifyData.invest} onChange={setInput} placeholder="การลงทุนต่อออเดอร์ ( ขั้นต่ำ 11 USDT )" />
+                                </div>
+                                <div className="form-group">
+                                    <label>ผลกำไรขั้นต่ำ  <span className="text-warning"> ( ขั้นต่ำ 0.15 ) **  คิดเป็นเปอร์เซน  </span></label>
+                                    <input type="number" className="form-control form-control-lg" name='rate' value={modifyData.minrate} onChange={setInput} placeholder="ผลกำไรขั้นต่ำ ( ขั้นต่ำ 0.15 ) ** คิดเป็นเปอร์เซน" />
+                                </div>
+                                <div className="form-group">
+                                    <label>ผลกำไรสูงสุด  <span className="text-warning"> ( ค่าตั้งต้น 1 ) **  คิดเป็นเปอร์เซน  </span></label>
+                                    <input type="number" className="form-control form-control-lg" name='rate' value={modifyData.maxrate} onChange={setInput} placeholder="ผลกำไรสูงสุด ( ค่าตั้งต้น 1 ) ** คิดเป็นเปอร์เซน" />
                                 </div>
                                 <div className="alert alert-dark mb-4 mt-3" role="alert">
                                     <i className="mdi mdi-pin me-1"></i>
